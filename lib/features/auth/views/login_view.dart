@@ -65,8 +65,7 @@ class _LoginViewState extends State<LoginView>
     return LoadingOverlay(
       isLoading: isLoading,
       child: Scaffold(
-        // Fondo azul profundo uniforme — sin degradado que dificulte la lectura
-        backgroundColor: AppTheme.primaryDark,
+        backgroundColor: AppTheme.backgroundColor,
         body: SafeArea(
           child: FadeTransition(
             opacity: _fadeAnim,
@@ -82,17 +81,17 @@ class _LoginViewState extends State<LoginView>
                     width: 88,
                     height: 88,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.12),
+                      color: AppTheme.surfaceColor,
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(
-                        color: Colors.white.withValues(alpha: 0.3),
+                        color: Colors.white.withOpacity(0.1),
                         width: 1.5,
                       ),
                     ),
                     child: const Icon(
                       Icons.apartment_rounded,
                       size: 46,
-                      color: Colors.white,
+                      color: AppTheme.primaryColor,
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -103,7 +102,7 @@ class _LoginViewState extends State<LoginView>
                     style: TextStyle(
                       fontSize: 30,
                       fontWeight: FontWeight.w800,
-                      color: Colors.white,
+                      color: AppTheme.textPrimary,
                       letterSpacing: -0.5,
                     ),
                   ),
@@ -112,25 +111,18 @@ class _LoginViewState extends State<LoginView>
                     'Sistema de gestión de condominios',
                     style: TextStyle(
                       fontSize: 13,
-                      color: Colors.white.withValues(alpha: 0.75),
+                      color: AppTheme.textSecondary,
                       fontWeight: FontWeight.w400,
                     ),
                   ),
 
                   const SizedBox(height: 36),
 
-                  // ─── Card blanca del formulario ────────────────
+                  // ─── Card oscura del formulario ────────────────
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppTheme.surfaceColor,
                       borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.25),
-                          blurRadius: 40,
-                          offset: const Offset(0, 16),
-                        ),
-                      ],
                     ),
                     padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
                     child: Form(
@@ -138,21 +130,12 @@ class _LoginViewState extends State<LoginView>
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Encabezado del card
                           const Text(
                             'Iniciar sesión',
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w700,
                               color: AppTheme.textPrimary,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          const Text(
-                            'Ingresa tus credenciales para continuar',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: AppTheme.textSecondary,
                             ),
                           ),
                           const SizedBox(height: 24),
@@ -201,10 +184,6 @@ class _LoginViewState extends State<LoginView>
                               key: const Key('forgot_password_btn'),
                               onPressed: () =>
                                   context.push(AppRoutes.forgotPassword),
-                              style: TextButton.styleFrom(
-                                padding: EdgeInsets.zero,
-                                minimumSize: const Size(0, 36),
-                              ),
                               child: const Text(
                                 '¿Olvidaste tu contraseña?',
                                 style: TextStyle(
@@ -216,7 +195,6 @@ class _LoginViewState extends State<LoginView>
                             ),
                           ),
 
-                          // Error
                           if (errorMsg != null) ...[
                             const SizedBox(height: 8),
                             _ErrorBanner(message: errorMsg),
@@ -227,7 +205,7 @@ class _LoginViewState extends State<LoginView>
                           // Botón login
                           AppButton(
                             id: 'login_submit_btn',
-                            label: 'Iniciar sesión',
+                            label: 'ENTRAR',
                             onPressed: isLoading ? null : _handleLogin,
                             isFullWidth: true,
                             icon: Icons.login_rounded,

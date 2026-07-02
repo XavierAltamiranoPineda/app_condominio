@@ -209,10 +209,12 @@ class _CuotaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final isVencida =
         cuota.fechaVencimiento.isBefore(DateTime.now());
 
     return Card(
+      color: AppTheme.surfaceColor,
       child: ListTile(
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -227,7 +229,9 @@ class _CuotaCard extends StatelessWidget {
               color: AppTheme.primaryColor, size: 22),
         ),
         title: Text(cuota.descripcion,
-            style: const TextStyle(fontWeight: FontWeight.w600)),
+            style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: theme.textTheme.bodyLarge?.color)),
         subtitle: Text(
           'Vence: ${_dateF.format(cuota.fechaVencimiento)} · ${cuota.tipo}',
           style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary),
@@ -235,7 +239,7 @@ class _CuotaCard extends StatelessWidget {
         trailing: Text(
           _currency.format(cuota.monto),
           style: TextStyle(
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w800,
             fontSize: 15,
             color:
                 isVencida ? AppTheme.errorColor : AppTheme.primaryColor,
@@ -267,7 +271,9 @@ class _PagoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Card(
+      color: AppTheme.surfaceColor,
       child: ListTile(
         contentPadding:
             const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -280,7 +286,9 @@ class _PagoCard extends StatelessWidget {
               color: _statusColor),
         ),
         title: Text(pago.residenteNombre,
-            style: const TextStyle(fontWeight: FontWeight.w600)),
+            style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: theme.textTheme.bodyLarge?.color)),
         subtitle: Text(
           'Unidad ${pago.unidadNumero}'
           '${pago.fechaPago != null ? ' · ${_dateF.format(pago.fechaPago!)}' : ''}',
@@ -293,7 +301,7 @@ class _PagoCard extends StatelessWidget {
             Text(
               _currency.format(pago.montoAbonado),
               style: TextStyle(
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w800,
                   fontSize: 14,
                   color: _statusColor),
             ),

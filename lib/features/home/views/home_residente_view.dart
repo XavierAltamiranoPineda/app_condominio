@@ -56,6 +56,10 @@ class _HomeResidenteViewState extends State<HomeResidenteView> {
             onPressed: () => context.push(AppRoutes.perfil),
           ),
         ],
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, color: AppTheme.borderColor),
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -151,7 +155,9 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Card(
+      color: AppTheme.surfaceColor,
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: Container(
@@ -164,7 +170,10 @@ class _SectionCard extends StatelessWidget {
           child: Icon(icon, color: color, size: 24),
         ),
         title: Text(title,
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+            style: TextStyle(
+                fontWeight: FontWeight.w700,
+                fontSize: 15,
+                color: theme.textTheme.bodyLarge?.color)),
         subtitle: Text(subtitle,
             style: const TextStyle(
                 fontSize: 12, color: AppTheme.textSecondary)),

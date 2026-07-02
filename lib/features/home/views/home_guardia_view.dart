@@ -27,6 +27,10 @@ class HomeGuardiaView extends StatelessWidget {
             onPressed: () => context.read<AuthController>().logout(),
           ),
         ],
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, color: AppTheme.borderColor),
+        ),
       ),
       body: Column(
         children: [

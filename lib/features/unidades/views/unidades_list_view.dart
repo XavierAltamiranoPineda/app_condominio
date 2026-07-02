@@ -134,13 +134,14 @@ class _UnidadCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return GestureDetector(
       onTap: () => context
           .read<UnidadController>()
           .selectUnidad(unidad),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.surfaceColor,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: _statusColor.withValues(alpha: 0.3),
@@ -189,10 +190,10 @@ class _UnidadCard extends StatelessWidget {
             const Spacer(),
             Text(
               'Unidad ${unidad.numero}',
-              style: const TextStyle(
+              style: TextStyle(
                   fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: AppTheme.textPrimary),
+                  fontWeight: FontWeight.w800,
+                  color: theme.textTheme.bodyLarge?.color),
             ),
             if (unidad.piso != null)
               Text('Piso ${unidad.piso}',
@@ -213,7 +214,7 @@ class _UnidadCard extends StatelessWidget {
               '\$${unidad.cuotaMensual.toStringAsFixed(0)}/mes',
               style: TextStyle(
                   fontSize: 11,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                   color: _statusColor),
             ),
           ],

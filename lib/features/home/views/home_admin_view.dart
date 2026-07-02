@@ -66,6 +66,10 @@ class _HomeAdminViewState extends State<HomeAdminView> {
           ),
           const SizedBox(width: 8),
         ],
+        bottom: const PreferredSize(
+          preferredSize: Size.fromHeight(1),
+          child: Divider(height: 1, color: AppTheme.borderColor),
+        ),
       ),
       body: _selectedIndex == 0
           ? _buildDashboard(theme)
@@ -137,7 +141,7 @@ class _HomeAdminViewState extends State<HomeAdminView> {
               crossAxisCount: 2,
               crossAxisSpacing: 12,
               mainAxisSpacing: 12,
-              childAspectRatio: 1.4,
+              childAspectRatio: 1.4, // Un valor balanceado para LayoutBuilder
             ),
             delegate: SliverChildListDelegate([
               DashboardStatCard(
@@ -269,6 +273,7 @@ class _HomeAdminViewState extends State<HomeAdminView> {
   void _showQuickActions(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => _QuickActionsSheet(),
     );
@@ -277,6 +282,7 @@ class _HomeAdminViewState extends State<HomeAdminView> {
   void _showMoreMenu(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => _MoreMenuSheet(),
     );
@@ -286,17 +292,18 @@ class _HomeAdminViewState extends State<HomeAdminView> {
 class _QuickActionsSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: const EdgeInsets.all(24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Crear nuevo', style: Theme.of(context).textTheme.headlineSmall),
+          Text('Crear nuevo', style: theme.textTheme.headlineSmall),
           const SizedBox(height: 16),
           _ActionTile(
             icon: Icons.person_add_rounded,
@@ -344,10 +351,11 @@ class _QuickActionsSheet extends StatelessWidget {
 class _MoreMenuSheet extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       padding: const EdgeInsets.all(24),
       child: Column(
