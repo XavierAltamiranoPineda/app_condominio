@@ -272,9 +272,3 @@ El sistema original es una app desktop Python/PyQt6 con SQLite. Para la app móv
 4. **Endpoints** definidos en `lib/core/constants/api_endpoints.dart`
 5. El backend expone `/auth/login` con `{ email, password }` retornando `{ access_token, refresh_token, usuario }`
 
----
-
-## 📞 Soporte
-
-- Email: soporte@condoadmin.com
-- Docs API: `http://localhost:8000/docs` (swagger en dev)
