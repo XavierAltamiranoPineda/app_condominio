@@ -57,6 +57,28 @@ class CuotaController extends ChangeNotifier {
     return true;
   }
 
+  /// Devuelve un pago por su id (para preseleccionar en el formulario).
+  Pago? getPagoById(String pagoId) =>
+      _pagos.cast<Pago?>().firstWhere((p) => p?.id == pagoId, orElse: () => null);
+
+  /// Marca un pago pendiente/vencido como pagado, actualizándolo en sitio.
+  /// Refresca la lista para que los totales y el "Por cobrar" se actualicen.
+  Future<bool> marcarComoPagado(
+      String pagoId, Map<String, dynamic> data) async {
+    _state = CuotaViewState.loading;
+    notifyListeners();
+    await Future.delayed(const Duration(milliseconds: 300));
+    final actualizado = _mock.marcarPagado(pagoId, data);
+    if (actualizado != null) {
+      final idx = _pagos.indexWhere((p) => p.id == pagoId);
+      if (idx != -1) _pagos[idx] = actualizado;
+    }
+    _pagos = _mock.getPagos();
+    _state = CuotaViewState.success;
+    notifyListeners();
+    return actualizado != null;
+  }
+
   Future<void> fetchEstadoCuenta(String residenteId) async {
     _state = CuotaViewState.loading;
     notifyListeners();

@@ -22,10 +22,6 @@ class MockService {
   // ─────────────────────────────────────────────────────────────
   final List<Residente> _residentes = [
     Residente(id: '1', nombre: 'Carlos', apellido: 'Mendoza', email: 'carlos@condo.com', telefono: '0991234567', unidadId: '1', unidadNumero: '101', activo: true, cedula: '1712345678', createdAt: DateTime(2024, 1, 15)),
-    Residente(id: '2', nombre: 'María', apellido: 'González', email: 'maria@condo.com', telefono: '0987654321', unidadId: '2', unidadNumero: '102', activo: true, cedula: '1723456789', createdAt: DateTime(2024, 2, 10)),
-    Residente(id: '3', nombre: 'Luis', apellido: 'Ramírez', email: 'luis@condo.com', telefono: '0976543210', unidadId: '3', unidadNumero: '201', activo: false, cedula: '1734567890', createdAt: DateTime(2024, 3, 5)),
-    Residente(id: '4', nombre: 'Ana', apellido: 'Torres', email: 'ana@condo.com', telefono: '0965432109', unidadId: '4', unidadNumero: '202', activo: true, cedula: '1745678901', createdAt: DateTime(2024, 4, 20)),
-    Residente(id: '5', nombre: 'Pedro', apellido: 'Vargas', email: 'pedro@condo.com', telefono: '0954321098', unidadId: null, unidadNumero: null, activo: true, cedula: '1756789012', createdAt: DateTime(2024, 5, 8)),
   ];
 
   List<Residente> getResidentes() => List.from(_residentes);
@@ -77,10 +73,6 @@ class MockService {
   // ─────────────────────────────────────────────────────────────
   final List<Unidad> _unidades = [
     Unidad(id: '1', numero: '101', piso: '1', torre: 'A', tipo: 'departamento', metrosCuadrados: 75, estado: 'ocupada', residenteId: '1', residenteNombre: 'Carlos Mendoza', cuotaMensual: 150, createdAt: DateTime(2023, 6, 1)),
-    Unidad(id: '2', numero: '102', piso: '1', torre: 'A', tipo: 'departamento', metrosCuadrados: 80, estado: 'ocupada', residenteId: '2', residenteNombre: 'María González', cuotaMensual: 160, createdAt: DateTime(2023, 6, 1)),
-    Unidad(id: '3', numero: '201', piso: '2', torre: 'A', tipo: 'departamento', metrosCuadrados: 90, estado: 'disponible', residenteId: null, residenteNombre: null, cuotaMensual: 180, createdAt: DateTime(2023, 6, 1)),
-    Unidad(id: '4', numero: '202', piso: '2', torre: 'B', tipo: 'departamento', metrosCuadrados: 85, estado: 'ocupada', residenteId: '4', residenteNombre: 'Ana Torres', cuotaMensual: 170, createdAt: DateTime(2023, 6, 1)),
-    Unidad(id: '5', numero: '301', piso: '3', torre: 'B', tipo: 'casa', metrosCuadrados: 120, estado: 'mantenimiento', residenteId: null, residenteNombre: null, cuotaMensual: 200, createdAt: DateTime(2023, 7, 15)),
   ];
 
   List<Unidad> getUnidades() => List.from(_unidades);
@@ -143,11 +135,14 @@ class MockService {
     Cuota(id: '4', descripcion: 'Cuota extraordinaria jardines', monto: 80, fechaVencimiento: DateTime(2025, 9, 1), tipo: 'extraordinaria', activa: true, createdAt: DateTime(2025, 8, 1)),
   ];
 
+  // Datos de prueba: un solo usuario (Carlos Mendoza · Unidad 101)
+  // 3 pagados, 1 pendiente y 1 vencido para poder probar los tres filtros.
   final List<Pago> _pagos = [
     Pago(id: '1', cuotaId: '1', residenteId: '1', residenteNombre: 'Carlos Mendoza', unidadNumero: '101', montoAbonado: 150, montoPendiente: 0, estado: 'pagado', metodoPago: 'transferencia', referencia: 'TRF-001', fechaPago: DateTime(2025, 6, 5), fechaVencimiento: DateTime(2025, 6, 30)),
-    Pago(id: '2', cuotaId: '1', residenteId: '2', residenteNombre: 'María González', unidadNumero: '102', montoAbonado: 150, montoPendiente: 0, estado: 'pagado', metodoPago: 'efectivo', referencia: null, fechaPago: DateTime(2025, 6, 8), fechaVencimiento: DateTime(2025, 6, 30)),
-    Pago(id: '3', cuotaId: '2', residenteId: '3', residenteNombre: 'Luis Ramírez', unidadNumero: '201', montoAbonado: 0, montoPendiente: 150, estado: 'vencido', metodoPago: null, referencia: null, fechaPago: null, fechaVencimiento: DateTime(2025, 7, 31)),
-    Pago(id: '4', cuotaId: '2', residenteId: '4', residenteNombre: 'Ana Torres', unidadNumero: '202', montoAbonado: 0, montoPendiente: 150, estado: 'pendiente', metodoPago: null, referencia: null, fechaPago: null, fechaVencimiento: DateTime(2025, 7, 31)),
+    Pago(id: '2', cuotaId: '2', residenteId: '1', residenteNombre: 'Carlos Mendoza', unidadNumero: '101', montoAbonado: 150, montoPendiente: 0, estado: 'pagado', metodoPago: 'efectivo', referencia: null, fechaPago: DateTime(2025, 7, 8), fechaVencimiento: DateTime(2025, 7, 31)),
+    Pago(id: '3', cuotaId: '3', residenteId: '1', residenteNombre: 'Carlos Mendoza', unidadNumero: '101', montoAbonado: 50, montoPendiente: 0, estado: 'pagado', metodoPago: 'transferencia', referencia: 'TRF-002', fechaPago: DateTime(2025, 8, 2), fechaVencimiento: DateTime(2025, 8, 15)),
+    Pago(id: '4', cuotaId: '4', residenteId: '1', residenteNombre: 'Carlos Mendoza', unidadNumero: '101', montoAbonado: 0, montoPendiente: 80, estado: 'pendiente', metodoPago: null, referencia: null, fechaPago: null, fechaVencimiento: DateTime(2025, 9, 1)),
+    Pago(id: '5', cuotaId: '2', residenteId: '1', residenteNombre: 'Carlos Mendoza', unidadNumero: '101', montoAbonado: 0, montoPendiente: 150, estado: 'vencido', metodoPago: null, referencia: null, fechaPago: null, fechaVencimiento: DateTime(2025, 7, 31)),
   ];
 
   List<Cuota> getCuotas() => List.from(_cuotas);
@@ -155,6 +150,34 @@ class MockService {
   List<Pago> getMorosos() => _pagos.where((p) => p.estado == 'vencido').toList();
   List<Pago> getEstadoCuenta(String residenteId) =>
       _pagos.where((p) => p.residenteId == residenteId).toList();
+
+  /// Marca un pago existente como pagado (actualiza en sitio, no crea uno nuevo).
+  /// Así los contadores (Pagados/Pendientes) y el "Por cobrar" se actualizan.
+  Pago? marcarPagado(String pagoId, Map<String, dynamic> data) {
+    final idx = _pagos.indexWhere((p) => p.id == pagoId);
+    if (idx == -1) return null;
+    final old = _pagos[idx];
+    final montoAbonado =
+        (data['monto_abonado'] as num?)?.toDouble() ?? old.montoPendiente;
+    final restante = (old.montoPendiente - montoAbonado);
+    final pendiente = restante < 0 ? 0.0 : restante;
+    final updated = Pago(
+      id: old.id,
+      cuotaId: old.cuotaId,
+      residenteId: old.residenteId,
+      residenteNombre: old.residenteNombre,
+      unidadNumero: old.unidadNumero,
+      montoAbonado: old.montoAbonado + montoAbonado,
+      montoPendiente: pendiente,
+      estado: pendiente <= 0 ? 'pagado' : 'parcial',
+      metodoPago: data['metodo_pago'] ?? old.metodoPago,
+      referencia: data['referencia'] ?? old.referencia,
+      fechaPago: DateTime.now(),
+      fechaVencimiento: old.fechaVencimiento,
+    );
+    _pagos[idx] = updated;
+    return updated;
+  }
 
   Pago registrarPago(Map<String, dynamic> data) {
     final p = Pago(
@@ -180,8 +203,6 @@ class MockService {
   // ─────────────────────────────────────────────────────────────
   final List<Incidencia> _incidencias = [
     Incidencia(id: '1', titulo: 'Fuga de agua en baño', descripcion: 'Hay una fuga en la tubería del baño principal', estado: 'abierta', categoria: 'mantenimiento', prioridad: 'alta', reportadoPorId: '1', reportadoPorNombre: 'Carlos Mendoza', unidadNumero: '101', createdAt: DateTime.now().subtract(const Duration(days: 3))),
-    Incidencia(id: '2', titulo: 'Ruido excesivo', descripcion: 'Vecinos hacen ruido después de las 10pm', estado: 'en_proceso', categoria: 'seguridad', prioridad: 'media', reportadoPorId: '2', reportadoPorNombre: 'María González', unidadNumero: '102', createdAt: DateTime.now().subtract(const Duration(days: 7))),
-    Incidencia(id: '3', titulo: 'Luz del pasillo dañada', descripcion: 'El foco del pasillo del piso 2 está fundido', estado: 'cerrada', categoria: 'mantenimiento', prioridad: 'baja', reportadoPorId: '4', reportadoPorNombre: 'Ana Torres', unidadNumero: '202', createdAt: DateTime.now().subtract(const Duration(days: 14)), closedAt: DateTime.now().subtract(const Duration(days: 2))),
   ];
 
   List<Incidencia> getIncidencias() => List.from(_incidencias);
@@ -264,7 +285,6 @@ class MockService {
 
   final List<Reserva> _reservas = [
     Reserva(id: '1', areaComunId: '1', areaComunNombre: 'Salón de eventos', residenteId: '1', residenteNombre: 'Carlos Mendoza', estado: 'aprobada', fechaInicio: DateTime.now().add(const Duration(days: 3)), fechaFin: DateTime.now().add(const Duration(days: 3, hours: 4)), observaciones: 'Cumpleaños familiar', createdAt: DateTime.now().subtract(const Duration(days: 1))),
-    Reserva(id: '2', areaComunId: '2', areaComunNombre: 'Piscina', residenteId: '2', residenteNombre: 'María González', estado: 'pendiente', fechaInicio: DateTime.now().add(const Duration(days: 7)), fechaFin: DateTime.now().add(const Duration(days: 7, hours: 2)), observaciones: null, createdAt: DateTime.now()),
   ];
 
   List<AreaComun> getAreasComunes() => List.from(_areasComunes);
@@ -308,7 +328,6 @@ class MockService {
   // ─────────────────────────────────────────────────────────────
   final List<Visita> _visitas = [
     Visita(id: '1', nombreVisitante: 'Roberto Silva', documentoIdentidad: '1798765432', telefono: '0987654321', unidadDestino: '101', residenteNombre: 'Carlos Mendoza', proposito: 'Visita familiar', vehiculoPlaca: null, horaIngreso: DateTime.now().subtract(const Duration(hours: 2)), horaSalida: null, qrCode: 'QR001', registradoPorId: 'guardia1'),
-    Visita(id: '2', nombreVisitante: 'Laura Pérez', documentoIdentidad: '1787654321', telefono: null, unidadDestino: '202', residenteNombre: 'Ana Torres', proposito: 'Entrega de paquete', vehiculoPlaca: 'ABC-1234', horaIngreso: DateTime.now().subtract(const Duration(hours: 5)), horaSalida: DateTime.now().subtract(const Duration(hours: 4, minutes: 30)), qrCode: 'QR002', registradoPorId: 'guardia1'),
   ];
 
   List<Visita> getVisitas() => List.from(_visitas);

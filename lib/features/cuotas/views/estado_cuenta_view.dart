@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
@@ -105,51 +106,88 @@ class _EstadoCuentaViewState extends State<EstadoCuentaView> {
                                     ? AppTheme.errorColor
                                     : AppTheme.warningColor;
 
+                            // Solo se puede pagar lo que aún se debe
+                            // (pendiente o vencido).
+                            final puedePagar = !pago.isPagado;
+
                             return Container(
                               margin: const EdgeInsets.only(bottom: 8),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: AppTheme.surfaceColor,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
                                     color: AppTheme.borderColor),
                               ),
-                              child: ListTile(
-                                leading: CircleAvatar(
-                                  backgroundColor:
-                                      statusColor.withValues(alpha: 0.12),
-                                  child: Icon(
-                                    pago.isPagado
-                                        ? Icons.check_rounded
-                                        : Icons.schedule_rounded,
-                                    color: statusColor,
-                                    size: 20,
-                                  ),
-                                ),
-                                title: Text(
-                                  pago.estadoEnum.label,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.w600),
-                                ),
-                                subtitle: pago.fechaPago != null
-                                    ? Text(
-                                        _dateF.format(pago.fechaPago!),
-                                        style: const TextStyle(
-                                            fontSize: 12,
-                                            color: AppTheme.textSecondary),
-                                      )
-                                    : Text(
-                                        'Vence: ${_dateF.format(pago.fechaVencimiento)}',
-                                        style: const TextStyle(
-                                            fontSize: 12,
-                                            color: AppTheme.textSecondary),
+                              child: Column(
+                                children: [
+                                  ListTile(
+                                    leading: CircleAvatar(
+                                      backgroundColor: statusColor
+                                          .withValues(alpha: 0.12),
+                                      child: Icon(
+                                        pago.isPagado
+                                            ? Icons.check_rounded
+                                            : Icons.schedule_rounded,
+                                        color: statusColor,
+                                        size: 20,
                                       ),
-                                trailing: Text(
-                                  _currency.format(pago.montoAbonado),
-                                  style: TextStyle(
-                                      color: statusColor,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 15),
-                                ),
+                                    ),
+                                    title: Text(
+                                      pago.estadoEnum.label,
+                                      style: const TextStyle(
+                                          fontWeight: FontWeight.w600),
+                                    ),
+                                    subtitle: pago.fechaPago != null
+                                        ? Text(
+                                            _dateF.format(pago.fechaPago!),
+                                            style: const TextStyle(
+                                                fontSize: 12,
+                                                color:
+                                                    AppTheme.textSecondary),
+                                          )
+                                        : Text(
+                                            'Vence: ${_dateF.format(pago.fechaVencimiento)}',
+                                            style: const TextStyle(
+                                                fontSize: 12,
+                                                color:
+                                                    AppTheme.textSecondary),
+                                          ),
+                                    trailing: Text(
+                                      _currency.format(pago.isPagado
+                                          ? pago.montoAbonado
+                                          : pago.montoPendiente),
+                                      style: TextStyle(
+                                          color: statusColor,
+                                          fontWeight: FontWeight.w700,
+                                          fontSize: 15),
+                                    ),
+                                  ),
+                                  if (puedePagar)
+                                    Padding(
+                                      padding: const EdgeInsets.fromLTRB(
+                                          16, 0, 16, 12),
+                                      child: SizedBox(
+                                        width: double.infinity,
+                                        child: FilledButton.icon(
+                                          onPressed: () async {
+                                            await context.push(
+                                                '/cuotas/pago/nuevo?pagoId=${pago.id}');
+                                            if (context.mounted) {
+                                              context
+                                                  .read<CuotaController>()
+                                                  .fetchEstadoCuenta(
+                                                      widget.residenteId);
+                                            }
+                                          },
+                                          icon: const Icon(
+                                              Icons.check_circle_rounded,
+                                              size: 18),
+                                          label: const Text(
+                                              'Marcar como pagado'),
+                                        ),
+                                      ),
+                                    ),
+                                ],
                               ),
                             );
                           },

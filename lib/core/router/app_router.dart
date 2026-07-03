@@ -181,7 +181,9 @@ class AppRouter {
           routes: [
             GoRoute(
               path: 'pago/nuevo',
-              builder: (_, __) => const PagoFormView(),
+              builder: (_, state) => PagoFormView(
+                pagoId: state.uri.queryParameters['pagoId'],
+              ),
             ),
             GoRoute(
               path: 'estado/:residenteId',

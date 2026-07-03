@@ -1,14 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../controllers/cuota_controller.dart';
+import '../models/cuota.dart';
 
-/// Formulario de registro de Pago
+final _currency = NumberFormat.currency(locale: 'es_MX', symbol: '\$');
+
+/// Formulario de registro de Pago.
+///
+/// Si se recibe [pagoId], el formulario opera en modo "Marcar como pagado":
+/// muestra únicamente la cuota de ese usuario y actualiza el pago existente
+/// (para que los totales y el "Por cobrar" se recalculen correctamente).
 class PagoFormView extends StatefulWidget {
-  const PagoFormView({super.key});
+  final String? pagoId;
+  const PagoFormView({super.key, this.pagoId});
 
   @override
   State<PagoFormView> createState() => _PagoFormViewState();
@@ -22,6 +32,30 @@ class _PagoFormViewState extends State<PagoFormView> {
   String? _residenteId;
   String _metodoPago = 'efectivo';
 
+  /// Pago que se está marcando como pagado (modo "Marcar como pagado").
+  Pago? _pago;
+
+  bool get _isMarcarPagado => widget.pagoId != null;
+
+  @override
+  void initState() {
+    super.initState();
+    if (_isMarcarPagado) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final ctrl = context.read<CuotaController>();
+        final pago = ctrl.getPagoById(widget.pagoId!);
+        if (pago != null) {
+          setState(() {
+            _pago = pago;
+            _cuotaId = pago.cuotaId;
+            _residenteId = pago.residenteId;
+            _montoCtrl.text = pago.montoPendiente.toStringAsFixed(0);
+          });
+        }
+      });
+    }
+  }
+
   @override
   void dispose() {
     _montoCtrl.dispose();
@@ -31,22 +65,33 @@ class _PagoFormViewState extends State<PagoFormView> {
 
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_cuotaId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Selecciona una cuota')),
-      );
-      return;
-    }
 
     final ctrl = context.read<CuotaController>();
-    final ok = await ctrl.registrarPago({
-      'cuota_id': _cuotaId,
-      'residente_id': _residenteId,
-      'monto_abonado': double.tryParse(_montoCtrl.text) ?? 0,
-      'metodo_pago': _metodoPago,
-      'referencia': _referenciaCtrl.text.trim(),
-      'fecha_pago': DateTime.now().toIso8601String(),
-    });
+    final monto = double.tryParse(_montoCtrl.text) ?? 0;
+
+    bool ok;
+    if (_isMarcarPagado) {
+      ok = await ctrl.marcarComoPagado(widget.pagoId!, {
+        'monto_abonado': monto,
+        'metodo_pago': _metodoPago,
+        'referencia': _referenciaCtrl.text.trim(),
+      });
+    } else {
+      if (_cuotaId == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Selecciona una cuota')),
+        );
+        return;
+      }
+      ok = await ctrl.registrarPago({
+        'cuota_id': _cuotaId,
+        'residente_id': _residenteId,
+        'monto_abonado': monto,
+        'metodo_pago': _metodoPago,
+        'referencia': _referenciaCtrl.text.trim(),
+        'fecha_pago': DateTime.now().toIso8601String(),
+      });
+    }
 
     if (ok && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -65,7 +110,9 @@ class _PagoFormViewState extends State<PagoFormView> {
     final ctrl = context.watch<CuotaController>();
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Registrar Pago')),
+      appBar: AppBar(
+        title: Text(_isMarcarPagado ? 'Marcar como pagado' : 'Registrar Pago'),
+      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Form(
@@ -80,24 +127,31 @@ class _PagoFormViewState extends State<PagoFormView> {
                       ?.copyWith(color: const Color(0xFF1A237E))),
               const SizedBox(height: 16),
 
-              // Cuota (dropdown dinámico)
-              DropdownButtonFormField<String>(
-                value: _cuotaId,
-                decoration: const InputDecoration(
-                  labelText: 'Cuota a pagar',
-                  prefixIcon: Icon(Icons.receipt_long_outlined),
+              // Cuota: en modo "Marcar como pagado" solo se muestra la del
+              // usuario seleccionado; en modo normal, un dropdown dinámico.
+              if (_isMarcarPagado)
+                _ResumenPago(pago: _pago)
+              else
+                DropdownButtonFormField<String>(
+                  value: _cuotaId,
+                  isExpanded: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Cuota a pagar',
+                    prefixIcon: Icon(Icons.receipt_long_outlined),
+                  ),
+                  hint: const Text('Selecciona una cuota'),
+                  items: ctrl.cuotas
+                      .map((c) => DropdownMenuItem(
+                            value: c.id,
+                            child: Text(
+                              '${c.descripcion} - \$${c.monto.toStringAsFixed(0)}',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ))
+                      .toList(),
+                  onChanged: (v) => setState(() => _cuotaId = v),
+                  validator: (v) => v == null ? 'Selecciona una cuota' : null,
                 ),
-                hint: const Text('Selecciona una cuota'),
-                items: ctrl.cuotas
-                    .map((c) => DropdownMenuItem(
-                          value: c.id,
-                          child: Text(
-                              '${c.descripcion} - \$${c.monto.toStringAsFixed(0)}'),
-                        ))
-                    .toList(),
-                onChanged: (v) => setState(() => _cuotaId = v),
-                validator: (v) => v == null ? 'Selecciona una cuota' : null,
-              ),
               const SizedBox(height: 12),
 
               // Monto
@@ -153,7 +207,7 @@ class _PagoFormViewState extends State<PagoFormView> {
               const SizedBox(height: 28),
               AppButton(
                 id: 'pago_submit',
-                label: 'Registrar pago',
+                label: _isMarcarPagado ? 'Confirmar pago' : 'Registrar pago',
                 isFullWidth: true,
                 isLoading: ctrl.isLoading,
                 onPressed: ctrl.isLoading ? null : _handleSubmit,
@@ -162,6 +216,58 @@ class _PagoFormViewState extends State<PagoFormView> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Tarjeta de resumen del pago del usuario a marcar como pagado.
+class _ResumenPago extends StatelessWidget {
+  final Pago? pago;
+  const _ResumenPago({required this.pago});
+
+  @override
+  Widget build(BuildContext context) {
+    final p = pago;
+    if (p == null) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 12),
+        child: LinearProgressIndicator(),
+      );
+    }
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.borderColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(p.residenteNombre,
+              style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                  color: AppTheme.textPrimary)),
+          const SizedBox(height: 4),
+          Text('Unidad ${p.unidadNumero}',
+              style: const TextStyle(
+                  fontSize: 12, color: AppTheme.textSecondary)),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Monto adeudado',
+                  style: TextStyle(
+                      fontSize: 13, color: AppTheme.textPrimary)),
+              Text(_currency.format(p.montoPendiente),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      color: AppTheme.primaryColor)),
+            ],
+          ),
+        ],
       ),
     );
   }

@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../auth/controllers/auth_controller.dart';
+import '../../cuotas/controllers/cuota_controller.dart';
+import '../../cuotas/models/cuota.dart';
 import '../widgets/dashboard_stat_card.dart';
 import '../widgets/quick_action_card.dart';
 import '../widgets/recent_activity_widget.dart';
@@ -207,7 +209,7 @@ class _HomeAdminViewState extends State<HomeAdminView> {
                     label: 'Registrar\nPago',
                     icon: Icons.payments_rounded,
                     color: AppTheme.successColor,
-                    onTap: () => context.push(AppRoutes.pagoNuevo),
+                    onTap: () => _showPagarPendientes(context),
                   ),
                   const SizedBox(width: 12),
                   QuickActionCard(
@@ -268,6 +270,15 @@ class _HomeAdminViewState extends State<HomeAdminView> {
 
   Widget _buildPlaceholder(String title) {
     return Center(child: Text('$title - Próximamente'));
+  }
+
+  void _showPagarPendientes(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _PagarPendientesSheet(),
+    );
   }
 
   void _showQuickActions(BuildContext context) {
@@ -457,4 +468,121 @@ class _NavItem {
   final IconData icon;
   final String label;
   const _NavItem({required this.icon, required this.label});
+}
+
+/// Hoja de "Registrar pago" que muestra únicamente las cuotas que el
+/// residente aún debe (pendientes) o que están vencidas (atrasadas).
+/// Al marcar como pagado se actualiza el estado compartido, por lo que
+/// se refleja tanto en "Cuotas y pagos" como en el dashboard.
+class _PagarPendientesSheet extends StatefulWidget {
+  const _PagarPendientesSheet();
+
+  @override
+  State<_PagarPendientesSheet> createState() => _PagarPendientesSheetState();
+}
+
+class _PagarPendientesSheetState extends State<_PagarPendientesSheet> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<CuotaController>().fetchPagos();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final ctrl = context.watch<CuotaController>();
+    // Solo lo que se debe: pendientes o vencidos.
+    final porPagar = ctrl.pagos.where((p) => !p.isPagado).toList();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Registrar pago', style: theme.textTheme.headlineSmall),
+          const SizedBox(height: 4),
+          const Text(
+            'Solo se muestran las cuotas que se deben o están vencidas.',
+            style: TextStyle(fontSize: 12, color: AppTheme.textSecondary),
+          ),
+          const SizedBox(height: 16),
+          if (ctrl.isLoading && porPagar.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else if (porPagar.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: Text('No hay cuotas pendientes por cobrar',
+                    style: TextStyle(color: AppTheme.textSecondary)),
+              ),
+            )
+          else
+            ...porPagar.map((p) => _PagarItem(pago: p)),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+}
+
+class _PagarItem extends StatelessWidget {
+  final Pago pago;
+  const _PagarItem({required this.pago});
+
+  @override
+  Widget build(BuildContext context) {
+    final statusColor =
+        pago.isVencido ? AppTheme.errorColor : AppTheme.warningColor;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.backgroundColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.borderColor),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: statusColor.withValues(alpha: 0.12),
+            child: Icon(Icons.schedule_rounded, color: statusColor, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(pago.residenteNombre,
+                    style: const TextStyle(fontWeight: FontWeight.w700)),
+                Text(
+                  'Unidad ${pago.unidadNumero} · ${pago.estadoEnum.label}',
+                  style: const TextStyle(
+                      fontSize: 12, color: AppTheme.textSecondary),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              context.push('${AppRoutes.pagoNuevo}?pagoId=${pago.id}');
+            },
+            child: const Text('Pagar'),
+          ),
+        ],
+      ),
+    );
+  }
 }
