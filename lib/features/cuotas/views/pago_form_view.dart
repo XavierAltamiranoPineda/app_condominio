@@ -3,9 +3,12 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/app_button.dart';
+import '../../notificaciones/controllers/notificacion_controller.dart';
+import '../../notificaciones/models/notificacion.dart';
 import '../controllers/cuota_controller.dart';
 import '../models/cuota.dart';
 
@@ -94,6 +97,15 @@ class _PagoFormViewState extends State<PagoFormView> {
     }
 
     if (ok && mounted) {
+      // Disparar notificación global de pago
+      context.read<NotificacionController>().addNotificacion(
+            titulo: 'Pago registrado',
+            mensaje:
+                'Se ha registrado un pago por ${_currency.format(monto)} vía ${_metodoPago.toUpperCase()}',
+            tipo: TipoNotificacion.pago,
+            route: AppRoutes.cuotas,
+          );
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Pago registrado correctamente'),

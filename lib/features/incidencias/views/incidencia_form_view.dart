@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/router/app_router.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/app_button.dart';
+import '../../notificaciones/controllers/notificacion_controller.dart';
+import '../../notificaciones/models/notificacion.dart';
 import '../controllers/incidencia_controller.dart';
 
 /// Formulario crear / ver Incidencia
@@ -43,6 +46,14 @@ class _IncidenciaFormViewState extends State<IncidenciaFormView> {
     });
 
     if (ok && mounted) {
+      // Disparar notificación global
+      context.read<NotificacionController>().addNotificacion(
+            titulo: 'Incidencia reportada: ${_tituloCtrl.text}',
+            mensaje: _descCtrl.text,
+            tipo: TipoNotificacion.incidencia,
+            route: AppRoutes.incidencias,
+          );
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Incidencia reportada correctamente'),

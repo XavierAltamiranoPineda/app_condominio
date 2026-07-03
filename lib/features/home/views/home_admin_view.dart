@@ -7,6 +7,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../cuotas/controllers/cuota_controller.dart';
 import '../../cuotas/models/cuota.dart';
+import '../../notificaciones/controllers/notificacion_controller.dart';
+import '../../notificaciones/widgets/notification_sheet.dart';
 import '../widgets/dashboard_stat_card.dart';
 import '../widgets/quick_action_card.dart';
 import '../widgets/recent_activity_widget.dart';
@@ -38,43 +40,40 @@ class _HomeAdminViewState extends State<HomeAdminView> {
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Hola, ${user?.nombre ?? 'Administrador'} 👋',
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-            Text(
-              'Panel de Administración',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.white.withOpacity(0.9),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
+        title: Text(
+          'Panel de Administración',
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.w800,
+          ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {},
-            tooltip: 'Notificaciones',
+          Consumer<NotificacionController>(
+            builder: (context, ctrl, child) {
+              return Badge(
+                label: Text('${ctrl.unreadCount}'),
+                isLabelVisible: ctrl.unreadCount > 0,
+                backgroundColor: AppTheme.primaryColor,
+                child: IconButton(
+                  icon: const Icon(Icons.notifications_outlined),
+                  onPressed: () => _showNotifications(context),
+                ),
+              );
+            },
           ),
           IconButton(
             icon: const Icon(Icons.account_circle_outlined),
             onPressed: () => context.push(AppRoutes.perfil),
-            tooltip: 'Perfil',
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout_rounded),
+            onPressed: () => context.read<AuthController>().logout(),
           ),
           const SizedBox(width: 8),
         ],
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: AppTheme.borderColor),
-        ),
       ),
       body: _selectedIndex == 0
-          ? _buildDashboard(theme)
+          ? _buildDashboard(theme, user)
           : _buildPlaceholder(_navItems[_selectedIndex].label),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedIndex,
@@ -116,9 +115,71 @@ class _HomeAdminViewState extends State<HomeAdminView> {
     );
   }
 
-  Widget _buildDashboard(ThemeData theme) {
+  Widget _buildDashboard(ThemeData theme, dynamic user) {
     return CustomScrollView(
       slivers: [
+        // ─── Banner de bienvenida (Igual al modelo del Guardia) ──────
+        SliverToBoxAdapter(
+          child: Container(
+            width: double.infinity,
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [AppTheme.primaryColor, AppTheme.primaryDark],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primaryColor.withValues(alpha: 0.2),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.admin_panel_settings_rounded,
+                      color: Colors.white, size: 30),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '¡Hola, ${user?.nombre ?? 'Administrador'}! 👋',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 18,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Bienvenido al panel de control',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontWeight: FontWeight.w500,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
         // ─── Estadísticas principales ──────────────────────────
         SliverPadding(
           padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -296,6 +357,15 @@ class _HomeAdminViewState extends State<HomeAdminView> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => _MoreMenuSheet(),
+    );
+  }
+
+  void _showNotifications(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const NotificationSheet(),
     );
   }
 }

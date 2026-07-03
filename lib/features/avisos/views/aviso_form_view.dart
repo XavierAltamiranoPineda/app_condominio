@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
+import '../../../core/router/app_router.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/app_button.dart';
+import '../../notificaciones/controllers/notificacion_controller.dart';
+import '../../notificaciones/models/notificacion.dart';
 import '../controllers/aviso_controller.dart';
 
 /// Formulario de publicación de Aviso
@@ -37,6 +40,14 @@ class _AvisoFormViewState extends State<AvisoFormView> {
       'activo': true,
     });
     if (ok && mounted) {
+      // Disparar notificación global (simulada en el controller compartido)
+      context.read<NotificacionController>().addNotificacion(
+            titulo: 'Nuevo aviso: ${_tituloCtrl.text}',
+            mensaje: _contenidoCtrl.text,
+            tipo: TipoNotificacion.aviso,
+            route: AppRoutes.avisos,
+          );
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Aviso publicado correctamente'),

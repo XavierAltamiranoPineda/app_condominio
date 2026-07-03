@@ -13,6 +13,7 @@ import 'features/unidades/controllers/unidad_controller.dart';
 import 'features/cuotas/controllers/cuota_controller.dart';
 import 'features/incidencias/controllers/incidencia_controller.dart';
 import 'features/avisos/controllers/aviso_controller.dart';
+import 'features/notificaciones/controllers/notificacion_controller.dart';
 import 'features/reservas/controllers/reserva_controller.dart';
 import 'features/visitas/controllers/visita_controller.dart';
 
@@ -59,6 +60,7 @@ class CondoAdminApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CuotaController()),
         ChangeNotifierProvider(create: (_) => IncidenciaController()),
         ChangeNotifierProvider(create: (_) => AvisoController()),
+        ChangeNotifierProvider(create: (_) => NotificacionController()),
         ChangeNotifierProvider(create: (_) => ReservaController()),
         ChangeNotifierProvider(create: (_) => VisitaController()),
       ],

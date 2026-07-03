@@ -6,6 +6,8 @@ import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../unidades/controllers/unidad_controller.dart';
+import '../../notificaciones/controllers/notificacion_controller.dart';
+import '../../notificaciones/widgets/notification_sheet.dart';
 
 /// Dashboard del Residente
 class HomeResidenteView extends StatefulWidget {
@@ -28,6 +30,7 @@ class _HomeResidenteViewState extends State<HomeResidenteView> {
   Widget build(BuildContext context) {
     final user = context.watch<AuthController>().currentUser;
     final unidadCtrl = context.watch<UnidadController>();
+    final theme = Theme.of(context);
 
     // Buscar la unidad del residente actual
     final miUnidad = unidadCtrl.unidades
@@ -44,94 +47,186 @@ class _HomeResidenteViewState extends State<HomeResidenteView> {
             : 'Sin unidad asignada');
 
     return Scaffold(
+      backgroundColor: AppTheme.backgroundColor,
       appBar: AppBar(
-        title: Text('Hola, ${user?.nombre ?? 'Residente'} 👋'),
+        title: Text(
+          'Mi Residencia',
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () {},
+          Consumer<NotificacionController>(
+            builder: (context, ctrl, child) {
+              return Badge(
+                label: Text('${ctrl.unreadCount}'),
+                isLabelVisible: ctrl.unreadCount > 0,
+                backgroundColor: AppTheme.primaryColor,
+                child: IconButton(
+                  icon: const Icon(Icons.notifications_outlined),
+                  onPressed: () => _showNotifications(context),
+                ),
+              );
+            },
           ),
           IconButton(
             icon: const Icon(Icons.account_circle_outlined),
             onPressed: () => context.push(AppRoutes.perfil),
           ),
+          IconButton(
+            icon: const Icon(Icons.logout_rounded),
+            onPressed: () => context.read<AuthController>().logout(),
+          ),
         ],
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: AppTheme.borderColor),
-        ),
       ),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(vertical: 8),
         children: [
-          // Mi unidad — navega a detalle de unidad si existe
-          _SectionCard(
-            title: 'Mi unidad',
-            subtitle: unidadSubtitle,
-            icon: Icons.home_rounded,
-            color: AppTheme.primaryColor,
-            onTap: miUnidad != null
-                ? () => context.push('/unidades/${miUnidad.id}/editar')
-                : null,
+          // Banner de bienvenida (Igual al modelo del Guardia)
+          Container(
+            width: double.infinity,
+            margin: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppTheme.primaryColor, AppTheme.primaryDark],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primaryColor.withValues(alpha: 0.2),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.face_6_rounded,
+                      color: Colors.white, size: 30),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '¡Hola, ${user?.nombre ?? 'Residente'}! 👋',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 18,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Condominio seguro y conectado',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontWeight: FontWeight.w500,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
 
-          // Estado de cuenta
-          _SectionCard(
-            title: 'Estado de cuenta',
-            subtitle: 'Ver mis pagos y cuotas pendientes',
-            icon: Icons.account_balance_wallet_rounded,
-            color: AppTheme.successColor,
-            badge: null,
-            onTap: () {
-              final uid = user?.id ?? '1';
-              context.push('/cuotas/estado/$uid');
-            },
-          ),
-          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              children: [
+                // Mi unidad — navega a detalle de unidad si existe
+                _SectionCard(
+                  title: 'Mi unidad',
+                  subtitle: unidadSubtitle,
+                  icon: Icons.home_rounded,
+                  color: AppTheme.primaryColor,
+                  onTap: miUnidad != null
+                      ? () => context.push('/unidades/${miUnidad.id}/editar')
+                      : null,
+                ),
+                const SizedBox(height: 12),
 
-          // Incidencias
-          _SectionCard(
-            title: 'Mis incidencias',
-            subtitle: 'Reportar o seguir incidencias',
-            icon: Icons.report_problem_rounded,
-            color: AppTheme.warningColor,
-            badge: null,
-            onTap: () => context.push(AppRoutes.incidencias),
-          ),
-          const SizedBox(height: 12),
+                // Estado de cuenta
+                _SectionCard(
+                  title: 'Estado de cuenta',
+                  subtitle: 'Ver mis pagos y cuotas pendientes',
+                  icon: Icons.account_balance_wallet_rounded,
+                  color: AppTheme.successColor,
+                  badge: null,
+                  onTap: () {
+                    final uid = user?.id ?? '1';
+                    context.push('/cuotas/estado/$uid');
+                  },
+                ),
+                const SizedBox(height: 12),
 
-          // Avisos — solo lectura para residente
-          _SectionCard(
-            title: 'Avisos del condominio',
-            subtitle: 'Comunicados y noticias',
-            icon: Icons.campaign_rounded,
-            color: AppTheme.infoColor,
-            badge: null,
-            onTap: () => context.push(AppRoutes.avisos),
-          ),
-          const SizedBox(height: 12),
+                // Incidencias
+                _SectionCard(
+                  title: 'Mis incidencias',
+                  subtitle: 'Reportar o seguir incidencias',
+                  icon: Icons.report_problem_rounded,
+                  color: AppTheme.warningColor,
+                  badge: null,
+                  onTap: () => context.push(AppRoutes.incidencias),
+                ),
+                const SizedBox(height: 12),
 
-          // Reservas
-          _SectionCard(
-            title: 'Solicitar reserva',
-            subtitle: 'Salón, piscina, cancha y más',
-            icon: Icons.calendar_month_rounded,
-            color: AppTheme.accentColor,
-            onTap: () => context.push(AppRoutes.reservas),
-          ),
-          const SizedBox(height: 12),
+                // Avisos — solo lectura para residente
+                _SectionCard(
+                  title: 'Avisos del condominio',
+                  subtitle: 'Comunicados y noticias',
+                  icon: Icons.campaign_rounded,
+                  color: AppTheme.infoColor,
+                  badge: null,
+                  onTap: () => context.push(AppRoutes.avisos),
+                ),
+                const SizedBox(height: 12),
 
-          // Cerrar sesión
-          _SectionCard(
-            title: 'Cerrar sesión',
-            subtitle: 'Salir de la aplicación',
-            icon: Icons.logout_rounded,
-            color: AppTheme.errorColor,
-            onTap: () => context.read<AuthController>().logout(),
+                // Reservas
+                _SectionCard(
+                  title: 'Solicitar reserva',
+                  subtitle: 'Salón, piscina, cancha y más',
+                  icon: Icons.calendar_month_rounded,
+                  color: AppTheme.accentColor,
+                  onTap: () => context.push(AppRoutes.reservas),
+                ),
+                const SizedBox(height: 12),
+
+                // Cerrar sesión
+                _SectionCard(
+                  title: 'Cerrar sesión',
+                  subtitle: 'Salir de la aplicación',
+                  icon: Icons.logout_rounded,
+                  color: AppTheme.errorColor,
+                  onTap: () => context.read<AuthController>().logout(),
+                ),
+              ],
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  void _showNotifications(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const NotificationSheet(),
     );
   }
 }

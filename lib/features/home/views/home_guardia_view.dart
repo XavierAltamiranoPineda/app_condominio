@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../auth/controllers/auth_controller.dart';
+import '../../notificaciones/controllers/notificacion_controller.dart';
+import '../../notificaciones/widgets/notification_sheet.dart';
 
 /// Dashboard del Guardia / Portería
 class HomeGuardiaView extends StatelessWidget {
@@ -13,11 +15,31 @@ class HomeGuardiaView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthController>().currentUser;
+    final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Turno activo · ${user?.nombre ?? 'Guardia'}'),
+        title: Text(
+          'Turno Activo',
+          style: theme.textTheme.titleLarge?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
         actions: [
+          Consumer<NotificacionController>(
+            builder: (context, ctrl, child) {
+              return Badge(
+                label: Text('${ctrl.unreadCount}'),
+                isLabelVisible: ctrl.unreadCount > 0,
+                backgroundColor: AppTheme.primaryColor,
+                child: IconButton(
+                  icon: const Icon(Icons.notifications_outlined),
+                  onPressed: () => _showNotifications(context),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.account_circle_outlined),
             onPressed: () => context.push(AppRoutes.perfil),
@@ -27,10 +49,6 @@ class HomeGuardiaView extends StatelessWidget {
             onPressed: () => context.read<AuthController>().logout(),
           ),
         ],
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(1),
-          child: Divider(height: 1, color: AppTheme.borderColor),
-        ),
       ),
       body: Column(
         children: [
@@ -127,6 +145,14 @@ class HomeGuardiaView extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+  void _showNotifications(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const NotificationSheet(),
     );
   }
 }
