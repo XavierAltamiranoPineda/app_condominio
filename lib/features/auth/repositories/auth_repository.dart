@@ -15,48 +15,6 @@ class AuthRepository {
   AuthRepository({Dio? dio}) : _dio = dio ?? DioClient.instance;
 
   Future<AuthResponse> login(LoginRequest request) async {
-    // ─── MOCK PARA PRUEBAS SIN BACKEND ───
-    await Future.delayed(const Duration(milliseconds: 400)); // feedback visual mínimo
-    
-    if (request.password == 'admin123') {
-      String rol = 'residente';
-      String nombre = 'Residente';
-      
-      if (request.email == 'admin@condominio.com') {
-        rol = 'admin';
-        nombre = 'Administrador';
-      } else if (request.email == 'guardia@condominio.com') {
-        rol = 'guardia';
-        nombre = 'Guardia';
-      } else if (request.email != 'residente@condominio.com') {
-        throw ApiException(
-          message: 'Credenciales inválidas. Usa admin@, residente@ o guardia@ con admin123',
-          statusCode: 401,
-          type: ApiExceptionType.unauthorized,
-        );
-      }
-
-      return AuthResponse(
-        accessToken: 'mock_jwt_token_12345',
-        refreshToken: 'mock_refresh_token_67890',
-        tokenType: 'Bearer',
-        expiresIn: 3600,
-        usuario: Usuario(
-          id: rol == 'residente' ? '1' : (rol == 'admin' ? '99' : '98'),
-          nombre: nombre,
-          apellido: 'Prueba',
-          email: request.email,
-          telefono: '0999999999',
-          rol: rol,
-          activo: true,
-          unidadId: rol == 'residente' ? '1' : null,
-          unidadNumero: rol == 'residente' ? '101' : null,
-          createdAt: DateTime.now(),
-        ),
-      );
-    }
-    // ──────────────────────────────────────────────
-
     try {
       final response = await _dio.post(
         ApiEndpoints.login,
@@ -64,11 +22,19 @@ class AuthRepository {
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return AuthResponse.fromJson(response.data as Map<String, dynamic>);
+        final responseData = response.data as Map<String, dynamic>;
+        
+        // El backend Spring Boot retorna un wrapper ApiResponse con 'data'
+        if (responseData.containsKey('data') && responseData['data'] != null) {
+          return AuthResponse.fromJson(responseData['data'] as Map<String, dynamic>);
+        }
+        
+        return AuthResponse.fromJson(responseData);
       }
 
+      final responseData = response.data as Map<String, dynamic>;
       throw ApiException(
-        message: response.data['message'] ?? 'Error al iniciar sesión',
+        message: responseData['message'] ?? 'Error al iniciar sesión',
         statusCode: response.statusCode ?? 0,
         type: ApiExceptionType.badRequest,
       );

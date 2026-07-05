@@ -144,10 +144,10 @@ class _LoginViewState extends State<LoginView>
                           AppTextField(
                             id: 'login_email',
                             controller: _emailCtrl,
-                            label: 'Correo electrónico',
-                            hint: 'usuario@condominio.com',
-                            prefixIcon: Icons.email_outlined,
-                            keyboardType: TextInputType.emailAddress,
+                            label: 'Usuario / Correo electrónico',
+                            hint: 'admin',
+                            prefixIcon: Icons.person_outline,
+                            keyboardType: TextInputType.text,
                             validator: _validateEmail,
                           ),
                           const SizedBox(height: 14),
@@ -235,9 +235,7 @@ class _LoginViewState extends State<LoginView>
   }
 
   String? _validateEmail(String? value) {
-    if (value == null || value.isEmpty) return 'El correo es requerido';
-    final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+$');
-    if (!emailRegex.hasMatch(value)) return 'Ingresa un correo válido';
+    if (value == null || value.trim().isEmpty) return 'El usuario o correo es requerido';
     return null;
   }
 
@@ -256,9 +254,7 @@ class _DemoCredentials extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const creds = [
-      ('Admin', 'admin@condominio.com'),
-      ('Residente', 'residente@condominio.com'),
-      ('Guardia', 'guardia@condominio.com'),
+      ('Admin', 'admin'),
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

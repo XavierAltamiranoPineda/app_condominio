@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -19,6 +20,9 @@ import 'features/visitas/controllers/visita_controller.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // BORRAR TODO EL CACHÉ Y CUENTAS PARA PRUEBAS LIMPIAS
+  await const FlutterSecureStorage().deleteAll();
 
   // Inicializar locale español para DateFormat / NumberFormat
   await initializeDateFormatting('es', null);

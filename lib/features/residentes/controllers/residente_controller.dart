@@ -42,7 +42,7 @@ class ResidenteController extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
     await Future.delayed(const Duration(milliseconds: 300));
-    _residentes = _mock.getResidentes();
+    _residentes = []; // TODO: Integrate with backend ResidenteRepository
     _state = ResidenteViewState.success;
     notifyListeners();
   }

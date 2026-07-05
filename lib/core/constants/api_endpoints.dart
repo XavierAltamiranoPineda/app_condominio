@@ -22,31 +22,32 @@ class ApiEndpoints {
   static String residenteById(String id) => '/residentes/$id';
   static String residenteUnidades(String id) => '/residentes/$id/unidades';
 
-  // ─── Unidades ─────────────────────────────────────────────────
+  // ─── Infraestructura ──────────────────────────────────────────
+  static const String condominios = '/condominios';
+  static String condominioById(String id) => '/condominios/$id';
+  static String condominioTorres(String id) => '/condominios/$id/torres';
+
   static const String unidades = '/unidades';
   static String unidadById(String id) => '/unidades/$id';
-  static String unidadResidentes(String id) => '/unidades/$id/residentes';
+  static String torreUnidades(String id) => '/torres/$id/unidades';
 
-  // ─── Cuotas ───────────────────────────────────────────────────
+  // ─── Cuotas y Pagos ───────────────────────────────────────────
   static const String cuotas = '/cuotas';
   static String cuotaById(String id) => '/cuotas/$id';
 
-  // ─── Pagos ────────────────────────────────────────────────────
   static const String pagos = '/pagos';
   static String pagoById(String id) => '/pagos/$id';
-  static String estadoCuenta(String residenteId) =>
-      '/pagos/estado-cuenta/$residenteId';
-  static const String morosidad = '/pagos/morosidad';
+  static const String multas = '/multas';
 
-  // ─── Incidencias ──────────────────────────────────────────────
-  static const String incidencias = '/incidencias';
-  static String incidenciaById(String id) => '/incidencias/$id';
-  static String cambiarEstadoIncidencia(String id) =>
-      '/incidencias/$id/estado';
+  // ─── Tickets (Incidencias / Mantenimiento) ────────────────────
+  static const String incidencias = '/tickets';
+  static String incidenciaById(String id) => '/tickets/$id';
+  static String cambiarEstadoIncidencia(String id) => '/tickets/$id/estado';
+  static String comentariosIncidencia(String id) => '/tickets/$id/comentarios';
 
-  // ─── Avisos ───────────────────────────────────────────────────
-  static const String avisos = '/avisos';
-  static String avisoById(String id) => '/avisos/$id';
+  // ─── Comunicados (Avisos) ─────────────────────────────────────
+  static const String avisos = '/comunicados';
+  static String avisoById(String id) => '/comunicados/$id';
 
   // ─── Reservas ─────────────────────────────────────────────────
   static const String reservas = '/reservas';

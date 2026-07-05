@@ -46,21 +46,18 @@ class RecentActivityWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Container(
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         color: AppTheme.surfaceColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppTheme.borderColor),
       ),
-      child: Column(
-        children: _mockData.asMap().entries.map((entry) {
-          final isLast = entry.key == _mockData.length - 1;
-          return _ActivityTile(
-            item: entry.value,
-            showDivider: !isLast,
-          );
-        }).toList(),
+      child: const Center(
+        child: Text(
+          'No hay actividad reciente',
+          style: TextStyle(color: AppTheme.textSecondary),
+        ),
       ),
     );
   }

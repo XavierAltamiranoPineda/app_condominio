@@ -7,6 +7,8 @@ import '../../../core/theme/app_theme.dart';
 import '../../auth/controllers/auth_controller.dart';
 import '../../cuotas/controllers/cuota_controller.dart';
 import '../../cuotas/models/cuota.dart';
+import '../../residentes/controllers/residente_controller.dart';
+import '../../incidencias/controllers/incidencia_controller.dart';
 import '../../notificaciones/controllers/notificacion_controller.dart';
 import '../../notificaciones/widgets/notification_sheet.dart';
 import '../widgets/dashboard_stat_card.dart';
@@ -210,35 +212,35 @@ class _HomeAdminViewState extends State<HomeAdminView> {
               DashboardStatCard(
                 id: 'stat_residentes',
                 title: 'Residentes',
-                value: '48',
-                subtitle: '+2 este mes',
+                value: '${context.watch<ResidenteController>().residentes.length}',
+                subtitle: 'Total registrados',
                 icon: Icons.people_rounded,
                 color: AppTheme.primaryColor,
-                trend: TrendDirection.up,
+                trend: TrendDirection.neutral,
               ),
               DashboardStatCard(
                 id: 'stat_pagos',
-                title: 'Pagos al día',
-                value: '85%',
-                subtitle: '41 de 48',
+                title: 'Pagos',
+                value: '${context.watch<CuotaController>().pagos.length}',
+                subtitle: 'Registrados',
                 icon: Icons.check_circle_rounded,
                 color: AppTheme.successColor,
-                trend: TrendDirection.up,
+                trend: TrendDirection.neutral,
               ),
               DashboardStatCard(
                 id: 'stat_morosos',
                 title: 'Morosos',
-                value: '7',
-                subtitle: '\$2,450 pendiente',
+                value: '${context.watch<CuotaController>().morosos.length}',
+                subtitle: 'Cuentas pendientes',
                 icon: Icons.warning_amber_rounded,
                 color: AppTheme.warningColor,
-                trend: TrendDirection.down,
+                trend: TrendDirection.neutral,
               ),
               DashboardStatCard(
                 id: 'stat_incidencias',
                 title: 'Incidencias',
-                value: '3',
-                subtitle: '2 abiertas',
+                value: '${context.watch<IncidenciaController>().incidencias.length}',
+                subtitle: 'Total reportes',
                 icon: Icons.report_problem_rounded,
                 color: AppTheme.errorColor,
                 trend: TrendDirection.neutral,

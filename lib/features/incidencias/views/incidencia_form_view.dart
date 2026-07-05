@@ -38,11 +38,16 @@ class _IncidenciaFormViewState extends State<IncidenciaFormView> {
     if (!_formKey.currentState!.validate()) return;
     final ctrl = context.read<IncidenciaController>();
 
+    int idCategoria = 4; // otro
+    if (_categoria == 'mantenimiento') idCategoria = 1;
+    if (_categoria == 'seguridad') idCategoria = 2;
+    if (_categoria == 'limpieza') idCategoria = 3;
+
     final ok = await ctrl.createIncidencia({
       'titulo': _tituloCtrl.text.trim(),
       'descripcion': _descCtrl.text.trim(),
-      'categoria': _categoria,
-      'prioridad': _prioridad,
+      'idCategoria': idCategoria,
+      'prioridad': _prioridad.toUpperCase(),
     });
 
     if (ok && mounted) {

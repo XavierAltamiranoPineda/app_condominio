@@ -103,22 +103,38 @@ class Usuario extends Equatable {
     );
   }
 
+  static String _parseRol(Map<String, dynamic> json) {
+    if (json['rol'] != null) return json['rol'].toString();
+    if (json['roles'] != null && json['roles'] is List && (json['roles'] as List).isNotEmpty) {
+      for (var r in json['roles'] as List) {
+        if (r is String && r.startsWith('ROLE_')) {
+          return r.replaceFirst('ROLE_', '').toLowerCase();
+        }
+        if (r is Map && r['nombre'] != null && r['nombre'].toString().startsWith('ROLE_')) {
+          return r['nombre'].toString().replaceFirst('ROLE_', '').toLowerCase();
+        }
+      }
+    }
+    return 'residente';
+  }
+
   factory Usuario.fromJson(Map<String, dynamic> json) {
+    final persona = json['persona'] ?? {};
     return Usuario(
-      id: json['id'].toString(),
-      nombre: json['nombre'] ?? '',
-      apellido: json['apellido'] ?? '',
-      email: json['email'] ?? '',
-      telefono: json['telefono'] ?? '',
-      rol: json['rol'] ?? 'residente',
-      activo: json['activo'] ?? true,
-      avatarUrl: json['avatar_url'],
-      unidadId: json['unidad_id']?.toString(),
-      unidadNumero: json['unidad_numero'],
+      id: json['id']?.toString() ?? '',
+      nombre: json['fullName'] ?? json['nombre'] ?? persona['nombres'] ?? '',
+      apellido: json['apellido'] ?? persona['apellidos'] ?? '',
+      email: json['email'] ?? json['username'] ?? '',
+      telefono: json['telefono'] ?? persona['telefono'] ?? '',
+      rol: _parseRol(json),
+      activo: json['activo'] ?? (json['estado'] == 'ACTIVO') ?? true,
+      avatarUrl: json['avatar_url'] ?? json['avatarUrl'],
+      unidadId: json['unidad_id']?.toString() ?? json['unidadId']?.toString(),
+      unidadNumero: json['unidad_numero'] ?? json['unidadNumero'],
       ultimoAcceso: json['ultimo_acceso'] != null
           ? DateTime.tryParse(json['ultimo_acceso'])
-          : null,
-      createdAt: DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
+          : (json['ultimoAcceso'] != null ? DateTime.tryParse(json['ultimoAcceso']) : null),
+      createdAt: DateTime.tryParse(json['created_at'] ?? json['fechaCreacion'] ?? '') ?? DateTime.now(),
     );
   }
 

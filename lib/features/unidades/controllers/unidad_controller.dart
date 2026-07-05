@@ -42,7 +42,7 @@ class UnidadController extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
     await Future.delayed(const Duration(milliseconds: 300));
-    _unidades = _mock.getUnidades();
+    _unidades = []; // TODO: Integrate with backend UnidadRepository
     _state = UnidadViewState.success;
     notifyListeners();
   }

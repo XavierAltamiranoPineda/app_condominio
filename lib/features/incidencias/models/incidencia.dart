@@ -71,29 +71,36 @@ class Incidencia extends Equatable {
       EstadoIncidenciaX.fromString(estado);
 
   factory Incidencia.fromJson(Map<String, dynamic> json) => Incidencia(
-        id: json['id'].toString(),
+        id: json['id']?.toString() ?? '',
         titulo: json['titulo'] ?? '',
         descripcion: json['descripcion'] ?? '',
-        estado: json['estado'] ?? 'abierta',
-        categoria: json['categoria'] ?? 'otro',
-        prioridad: json['prioridad'] ?? 'media',
-        reportadoPorId: json['reportado_por_id'].toString(),
-        reportadoPorNombre: json['reportado_por_nombre'] ?? '',
+        estado: json['estado']?.toString().toLowerCase() ?? 'abierta',
+        categoria: json['categoria']?.toString() ?? 'otro',
+        prioridad: json['prioridad']?.toString() ?? 'media',
+        reportadoPorId: json['reportado_por_id']?.toString() ?? '',
+        reportadoPorNombre: json['creadoPor'] ?? json['reportado_por_nombre'] ?? '',
         unidadNumero: json['unidad_numero'],
         observaciones: json['observaciones'],
         createdAt:
-            DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
+            DateTime.tryParse(json['fechaCreacion'] ?? json['created_at'] ?? '') ?? DateTime.now(),
         closedAt: json['closed_at'] != null
             ? DateTime.tryParse(json['closed_at'])
             : null,
       );
 
-  Map<String, dynamic> toJson() => {
+  Map<String, dynamic> toJson() {
+    int idCategoria = 4; // 'otro'
+    if (categoria.toLowerCase() == 'mantenimiento') idCategoria = 1;
+    if (categoria.toLowerCase() == 'seguridad') idCategoria = 2;
+    if (categoria.toLowerCase() == 'limpieza') idCategoria = 3;
+
+    return {
         'titulo': titulo,
         'descripcion': descripcion,
-        'categoria': categoria,
-        'prioridad': prioridad,
+        'idCategoria': idCategoria,
+        'prioridad': prioridad.toUpperCase(),
       };
+  }
 
   @override
   List<Object?> get props => [id, estado, prioridad];

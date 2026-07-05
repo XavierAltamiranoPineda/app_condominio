@@ -51,13 +51,13 @@ class Cuota extends Equatable {
   });
 
   factory Cuota.fromJson(Map<String, dynamic> json) => Cuota(
-        id: json['id'].toString(),
-        descripcion: json['descripcion'] ?? '',
+        id: json['id']?.toString() ?? '',
+        descripcion: json['descripcion'] ?? '${json['tipo']} ${json['mes'] ?? ''}/${json['anio'] ?? ''}',
         monto: (json['monto'] ?? 0).toDouble(),
-        fechaVencimiento: DateTime.tryParse(json['fecha_vencimiento'] ?? '') ??
+        fechaVencimiento: DateTime.tryParse(json['fechaVencimiento'] ?? json['fecha_vencimiento'] ?? '') ??
             DateTime.now(),
-        tipo: json['tipo'] ?? 'mensual',
-        activa: json['activa'] ?? true,
+        tipo: json['tipo']?.toString().toLowerCase() ?? 'mensual',
+        activa: (json['estado'] != 'PAGADO'),
         createdAt:
             DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
       );
@@ -65,8 +65,8 @@ class Cuota extends Equatable {
   Map<String, dynamic> toJson() => {
         'descripcion': descripcion,
         'monto': monto,
-        'fecha_vencimiento': fechaVencimiento.toIso8601String(),
-        'tipo': tipo,
+        'fechaVencimiento': fechaVencimiento.toIso8601String(),
+        'tipo': tipo.toUpperCase(),
         'activa': activa,
       };
 
@@ -109,30 +109,30 @@ class Pago extends Equatable {
   bool get isVencido => estado == 'vencido';
 
   factory Pago.fromJson(Map<String, dynamic> json) => Pago(
-        id: json['id'].toString(),
-        cuotaId: json['cuota_id'].toString(),
-        residenteId: json['residente_id'].toString(),
+        id: json['id']?.toString() ?? '',
+        cuotaId: json['idCuota']?.toString() ?? json['cuota_id']?.toString() ?? '',
+        residenteId: json['residente_id']?.toString() ?? '',
         residenteNombre: json['residente_nombre'] ?? '',
         unidadNumero: json['unidad_numero'] ?? '',
-        montoAbonado: (json['monto_abonado'] ?? 0).toDouble(),
+        montoAbonado: (json['monto'] ?? json['monto_abonado'] ?? 0).toDouble(),
         montoPendiente: (json['monto_pendiente'] ?? 0).toDouble(),
-        estado: json['estado'] ?? 'pendiente',
-        metodoPago: json['metodo_pago'],
-        referencia: json['referencia'],
-        fechaPago: json['fecha_pago'] != null
-            ? DateTime.tryParse(json['fecha_pago'])
-            : null,
+        estado: json['estado']?.toString().toLowerCase() ?? 'pendiente',
+        metodoPago: json['metodo'] ?? json['metodo_pago'],
+        referencia: json['numeroRecibo'] ?? json['referencia'],
+        fechaPago: json['fechaPago'] != null
+            ? DateTime.tryParse(json['fechaPago'])
+            : (json['fecha_pago'] != null ? DateTime.tryParse(json['fecha_pago']) : null),
         fechaVencimiento:
-            DateTime.tryParse(json['fecha_vencimiento'] ?? '') ??
+            DateTime.tryParse(json['fechaVencimiento'] ?? json['fecha_vencimiento'] ?? '') ??
                 DateTime.now(),
       );
 
   Map<String, dynamic> toJson() => {
-        'cuota_id': cuotaId,
-        'residente_id': residenteId,
-        'monto_abonado': montoAbonado,
-        'metodo_pago': metodoPago,
+        'idCuota': int.tryParse(cuotaId) ?? 0,
+        'montoPagado': montoAbonado,
+        'metodoPago': metodoPago?.toUpperCase() ?? 'TRANSFERENCIA',
         'referencia': referencia,
+        'fechaPago': fechaPago?.toIso8601String().split('T')[0] ?? DateTime.now().toIso8601String().split('T')[0],
       };
 
   @override

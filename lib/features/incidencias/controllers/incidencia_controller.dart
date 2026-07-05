@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
-import '../../../core/mock/mock_service.dart';
 import '../models/incidencia.dart';
+import '../repositories/incidencia_repository.dart';
 
 enum IncidenciaViewState { idle, loading, success, error }
 
 class IncidenciaController extends ChangeNotifier {
-  final _mock = MockService.instance;
+  final IncidenciaRepository _repository;
+
+  IncidenciaController({IncidenciaRepository? repository})
+      : _repository = repository ?? IncidenciaRepository();
 
   List<Incidencia> _incidencias = [];
   Incidencia? _selected;
@@ -37,35 +40,51 @@ class IncidenciaController extends ChangeNotifier {
 
   Future<void> fetchIncidencias() async {
     _state = IncidenciaViewState.loading;
+    _errorMessage = null;
     notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 300));
-    _incidencias = _mock.getIncidencias();
-    _state = IncidenciaViewState.success;
+    try {
+      _incidencias = await _repository.getIncidencias();
+      _state = IncidenciaViewState.success;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _state = IncidenciaViewState.error;
+    }
     notifyListeners();
   }
 
   Future<bool> createIncidencia(Map<String, dynamic> data) async {
     _state = IncidenciaViewState.loading;
+    _errorMessage = null;
     notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 300));
-    final nueva = _mock.createIncidencia(data);
-    _incidencias.insert(0, nueva);
-    _state = IncidenciaViewState.success;
-    notifyListeners();
-    return true;
+    try {
+      final nueva = await _repository.createIncidencia(data);
+      _incidencias.insert(0, nueva);
+      _state = IncidenciaViewState.success;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _state = IncidenciaViewState.error;
+      notifyListeners();
+      return false;
+    }
   }
 
   Future<bool> cambiarEstado(String id, EstadoIncidencia nuevoEstado) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    final updated = _mock.cambiarEstadoIncidencia(id, nuevoEstado.value);
-    if (updated == null) return false;
-    final idx = _incidencias.indexWhere((i) => i.id == id);
-    if (idx != -1) {
-      _incidencias[idx] = updated;
-      if (_selected?.id == id) _selected = updated;
+    try {
+      final updated = await _repository.cambiarEstado(id, nuevoEstado.value);
+      final idx = _incidencias.indexWhere((i) => i.id == id);
+      if (idx != -1) {
+        _incidencias[idx] = updated;
+        if (_selected?.id == id) _selected = updated;
+        notifyListeners();
+      }
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
       notifyListeners();
+      return false;
     }
-    return true;
   }
 
   void selectIncidencia(Incidencia i) {

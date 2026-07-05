@@ -19,11 +19,13 @@ class AuthResponse extends Equatable {
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) {
     return AuthResponse(
-      accessToken: json['access_token'] ?? '',
-      refreshToken: json['refresh_token'],
-      tokenType: json['token_type'] ?? 'Bearer',
-      expiresIn: json['expires_in'] ?? 3600,
-      usuario: Usuario.fromJson(json['usuario'] ?? json['user'] ?? {}),
+      accessToken: json['access_token'] ?? json['accessToken'] ?? '',
+      refreshToken: json['refresh_token'] ?? json['refreshToken'],
+      tokenType: json['token_type'] ?? json['tokenType'] ?? 'Bearer',
+      expiresIn: json['expires_in'] ?? json['expiresIn'] ?? 3600,
+      usuario: Usuario.fromJson(
+        json['usuario'] ?? json['user'] ?? json,
+      ),
     );
   }
 
