@@ -6,6 +6,7 @@ class LoggingInterceptor extends Interceptor {
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     // ignore: avoid_print
     print('→ [${options.method}] ${options.uri}');
+    print('→ Headers: ${options.headers}');
     handler.next(options);
   }
 

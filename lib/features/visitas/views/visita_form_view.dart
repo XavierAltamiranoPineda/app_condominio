@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../controllers/visita_controller.dart';
+import '../models/visita.dart';
 
 /// Formulario de registro de Visita
 class VisitaFormView extends StatefulWidget {
@@ -38,15 +39,20 @@ class _VisitaFormViewState extends State<VisitaFormView> {
     if (!_formKey.currentState!.validate()) return;
     final ctrl = context.read<VisitaController>();
 
-    final ok = await ctrl.registrarIngreso({
-      'nombre_visitante': _nombreCtrl.text.trim(),
-      'documento_identidad': _documentoCtrl.text.trim(),
-      'telefono': _telefonoCtrl.text.trim(),
-      'unidad_destino': _unidadCtrl.text.trim(),
-      'proposito': _propositoCtrl.text.trim(),
-      'vehiculo_placa': _placaCtrl.text.trim(),
-      'hora_ingreso': DateTime.now().toIso8601String(),
-    });
+    final visita = Visita(
+      id: '',
+      nombreVisitante: _nombreCtrl.text.trim(),
+      documentoIdentidad: _documentoCtrl.text.trim(),
+      telefono: _telefonoCtrl.text.trim(),
+      unidadDestino: _unidadCtrl.text.trim(),
+      residenteNombre: '',
+      proposito: _propositoCtrl.text.trim(),
+      vehiculoPlaca: _placaCtrl.text.trim(),
+      horaIngreso: DateTime.now(),
+      registradoPorId: '',
+    );
+
+    final ok = await ctrl.registrarIngreso(visita.toJson());
 
     if (ok && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

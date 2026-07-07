@@ -38,8 +38,9 @@ class Aviso extends Equatable {
   Map<String, dynamic> toJson() => {
         'titulo': titulo,
         'mensaje': contenido,
-        'tipo': tipo.toUpperCase(),
-        'importancia': 'ALTA',
+        'autorId': 1,
+        'destinatarioTipo': 'TODOS',
+        'destinatarioId': null,
       };
 
   @override

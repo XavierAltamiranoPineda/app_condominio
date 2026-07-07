@@ -17,7 +17,10 @@ class DioClient {
   }
 
   static Dio _createDio() {
-    final baseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:8000/api/v1';
+    var baseUrl = dotenv.env['API_BASE_URL'] ?? 'http://localhost:8000/api/v1';
+    if (!baseUrl.endsWith('/')) {
+      baseUrl += '/';
+    }
     final timeout = int.parse(dotenv.env['API_TIMEOUT'] ?? '30000');
 
     final dio = Dio(
@@ -31,6 +34,7 @@ class DioClient {
           'Accept': 'application/json',
           'Accept-Language': 'es',
         },
+        followRedirects: false,
         validateStatus: (status) => status != null && status < 500,
       ),
     );

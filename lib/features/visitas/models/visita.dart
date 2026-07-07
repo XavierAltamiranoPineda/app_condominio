@@ -50,13 +50,9 @@ class Visita extends Equatable {
       );
 
   Map<String, dynamic> toJson() => {
-        'nombre_visitante': nombreVisitante,
-        'documento_identidad': documentoIdentidad,
+        'nombre': nombreVisitante,
+        'cedula': documentoIdentidad,
         'telefono': telefono,
-        'unidad_destino': unidadDestino,
-        'proposito': proposito,
-        'vehiculo_placa': vehiculoPlaca,
-        'hora_ingreso': horaIngreso.toIso8601String(),
       };
 
   @override

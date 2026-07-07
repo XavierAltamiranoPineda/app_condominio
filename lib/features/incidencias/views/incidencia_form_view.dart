@@ -8,6 +8,7 @@ import '../../../shared/widgets/app_button.dart';
 import '../../notificaciones/controllers/notificacion_controller.dart';
 import '../../notificaciones/models/notificacion.dart';
 import '../controllers/incidencia_controller.dart';
+import '../models/incidencia.dart';
 
 /// Formulario crear / ver Incidencia
 class IncidenciaFormView extends StatefulWidget {
@@ -36,19 +37,22 @@ class _IncidenciaFormViewState extends State<IncidenciaFormView> {
 
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
+    
     final ctrl = context.read<IncidenciaController>();
+    
+    final incidencia = Incidencia(
+      id: widget.incidenciaId ?? '',
+      titulo: _tituloCtrl.text.trim(),
+      descripcion: _descCtrl.text.trim(),
+      categoria: _categoria,
+      prioridad: _prioridad,
+      estado: 'abierta',
+      reportadoPorId: '1',
+      reportadoPorNombre: '',
+      createdAt: DateTime.now(),
+    );
 
-    int idCategoria = 4; // otro
-    if (_categoria == 'mantenimiento') idCategoria = 1;
-    if (_categoria == 'seguridad') idCategoria = 2;
-    if (_categoria == 'limpieza') idCategoria = 3;
-
-    final ok = await ctrl.createIncidencia({
-      'titulo': _tituloCtrl.text.trim(),
-      'descripcion': _descCtrl.text.trim(),
-      'idCategoria': idCategoria,
-      'prioridad': _prioridad.toUpperCase(),
-    });
+    final ok = await ctrl.createIncidencia(incidencia.toJson());
 
     if (ok && mounted) {
       // Disparar notificación global

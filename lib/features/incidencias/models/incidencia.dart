@@ -95,9 +95,10 @@ class Incidencia extends Equatable {
     if (categoria.toLowerCase() == 'limpieza') idCategoria = 3;
 
     return {
+        'categoriaId': idCategoria,
+        'estadoActualId': 1,
         'titulo': titulo,
         'descripcion': descripcion,
-        'idCategoria': idCategoria,
         'prioridad': prioridad.toUpperCase(),
       };
   }

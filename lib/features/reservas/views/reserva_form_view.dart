@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../controllers/reserva_controller.dart';
+import '../models/reserva.dart';
 
 /// Formulario de solicitud de Reserva
 class ReservaFormView extends StatefulWidget {
@@ -76,12 +77,20 @@ class _ReservaFormViewState extends State<ReservaFormView> {
     }
 
     final ctrl = context.read<ReservaController>();
-    final ok = await ctrl.createReserva({
-      'area_comun_id': _areaComunId,
-      'fecha_inicio': _fechaInicio!.toIso8601String(),
-      'fecha_fin': _fechaFin!.toIso8601String(),
-      'observaciones': _obsCtrl.text.trim(),
-    });
+    final reserva = Reserva(
+      id: '',
+      areaComunId: _areaComunId!,
+      areaComunNombre: '',
+      residenteId: '1',
+      residenteNombre: '',
+      estado: 'pendiente',
+      fechaInicio: _fechaInicio!,
+      fechaFin: _fechaFin!,
+      observaciones: _obsCtrl.text.trim(),
+      createdAt: DateTime.now(),
+    );
+
+    final ok = await ctrl.createReserva(reserva.toJson());
 
     if (ok && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(

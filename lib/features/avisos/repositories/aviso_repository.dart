@@ -11,7 +11,19 @@ class AvisoRepository {
   AvisoRepository({Dio? dio}) : _dio = dio ?? DioClient.instance;
 
   Future<List<Aviso>> getAvisos() async {
-    throw UnimplementedError('El endpoint GET /comunicados no está documentado en el contrato OpenAPI');
+    try {
+      final response = await _dio.get(ApiEndpoints.avisos, queryParameters: {'page': 0, 'size': 50});
+
+      if (response.statusCode == 200) {
+        final responseData = response.data as Map<String, dynamic>;
+        final data = responseData.containsKey('data') ? responseData['data'] : responseData;
+        final list = (data is Map && data.containsKey('content')) ? data['content'] as List : data as List;
+        return list.map((e) => Aviso.fromJson(e as Map<String, dynamic>)).toList();
+      }
+      throw ApiException(message: 'Error al obtener avisos', statusCode: response.statusCode ?? 500, type: ApiExceptionType.unknown);
+    } catch (e) {
+      throw ApiErrorHandler.handle(e);
+    }
   }
 
   Future<Aviso> createAviso(Map<String, dynamic> data) async {

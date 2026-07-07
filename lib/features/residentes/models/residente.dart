@@ -55,13 +55,15 @@ class Residente extends Equatable {
 
   Map<String, dynamic> toJson() => {
         'tipoIdentificacion': 'CEDULA',
-        'numeroIdentificacion': cedula,
+        'numeroIdentificacion': cedula ?? '',
         'nombres': nombre,
         'apellidos': apellido,
-        'correo': email,
         'telefono': telefono,
-        'esPropietario': false,
-        'idUnidad': unidadId != null ? int.tryParse(unidadId!) : null,
+        'correo': email,
+        'fechaNacimiento': '1990-01-01',
+        'direccion': 'N/A',
+        'fotoPerfil': avatarUrl ?? 'https://link.com/perfil.jpg',
+        'estado': activo ? 'ACTIVO' : 'INACTIVO',
       };
 
   Residente copyWith({

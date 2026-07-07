@@ -73,16 +73,19 @@ class Unidad extends Equatable {
             DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
       );
 
-  Map<String, dynamic> toJson() => {
+  Map<String, dynamic> toJson() {
+    int estadoId = 1;
+    if (estado.toLowerCase() == 'mantenimiento' || estado.toLowerCase() == 'disponible') estadoId = 2;
+    return {
+        'condominioId': 1,
+        'torreId': 2,
+        'estadoId': estadoId,
         'numero': numero,
-        'piso': piso,
-        'torre': torre,
-        'tipo': tipo,
-        'metros_cuadrados': metrosCuadrados,
-        'estado': estado,
-        'residente_id': residenteId,
-        'cuota_mensual': cuotaMensual,
+        'piso': piso ?? '1',
+        'tipo': tipo.toUpperCase(),
+        'alicuota': cuotaMensual,
       };
+  }
 
   @override
   List<Object?> get props => [id, numero, estado];

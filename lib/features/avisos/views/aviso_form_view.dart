@@ -8,6 +8,7 @@ import '../../../shared/widgets/app_button.dart';
 import '../../notificaciones/controllers/notificacion_controller.dart';
 import '../../notificaciones/models/notificacion.dart';
 import '../controllers/aviso_controller.dart';
+import '../models/aviso.dart';
 
 /// Formulario de publicación de Aviso
 class AvisoFormView extends StatefulWidget {
@@ -32,13 +33,19 @@ class _AvisoFormViewState extends State<AvisoFormView> {
 
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
+    
     final ctrl = context.read<AvisoController>();
-    final ok = await ctrl.createAviso({
-      'titulo': _tituloCtrl.text.trim(),
-      'contenido': _contenidoCtrl.text.trim(),
-      'tipo': _tipo,
-      'activo': true,
-    });
+    
+    final aviso = Aviso(
+      id: '',
+      titulo: _tituloCtrl.text.trim(),
+      contenido: _contenidoCtrl.text.trim(),
+      tipo: _tipo,
+      activo: true,
+      publicadoPorNombre: '',
+      createdAt: DateTime.now(),
+    );
+    final ok = await ctrl.createAviso(aviso.toJson());
     if (ok && mounted) {
       // Disparar notificación global (simulada en el controller compartido)
       context.read<NotificacionController>().addNotificacion(

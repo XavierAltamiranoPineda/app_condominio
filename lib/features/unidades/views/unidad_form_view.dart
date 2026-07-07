@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../controllers/unidad_controller.dart';
+import '../models/unidad.dart';
 
 /// Formulario crear / editar Unidad
 class UnidadFormView extends StatefulWidget {
@@ -40,15 +41,18 @@ class _UnidadFormViewState extends State<UnidadFormView> {
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
     final ctrl = context.read<UnidadController>();
-    final data = {
-      'numero': _numeroCtrl.text.trim(),
-      'piso': _pisoCtrl.text.trim(),
-      'torre': _torreCtrl.text.trim(),
-      'tipo': _tipo,
-      'estado': _estado,
-      'metros_cuadrados': double.tryParse(_metrosCtrl.text) ?? 0,
-      'cuota_mensual': double.tryParse(_cuotaCtrl.text) ?? 0,
-    };
+    final unidad = Unidad(
+      id: widget.unidadId ?? '',
+      numero: _numeroCtrl.text.trim(),
+      piso: _pisoCtrl.text.trim(),
+      torre: _torreCtrl.text.trim(),
+      tipo: _tipo,
+      metrosCuadrados: double.tryParse(_metrosCtrl.text) ?? 0,
+      estado: _estado,
+      cuotaMensual: double.tryParse(_cuotaCtrl.text) ?? 0,
+      createdAt: DateTime.now(),
+    );
+    final data = unidad.toJson();
 
     bool ok;
     if (widget.isEditing) {

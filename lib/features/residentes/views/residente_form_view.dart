@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../controllers/residente_controller.dart';
+import '../models/residente.dart';
 
 /// Formulario de Crear / Editar Residente
 class ResidenteFormView extends StatefulWidget {
@@ -59,13 +60,17 @@ class _ResidenteFormViewState extends State<ResidenteFormView> {
     if (!_formKey.currentState!.validate()) return;
 
     final ctrl = context.read<ResidenteController>();
-    final data = {
-      'nombre': _nombreCtrl.text.trim(),
-      'apellido': _apellidoCtrl.text.trim(),
-      'email': _emailCtrl.text.trim(),
-      'telefono': _telCtrl.text.trim(),
-      'cedula': _cedulaCtrl.text.trim(),
-    };
+    final residente = Residente(
+      id: widget.residenteId ?? '',
+      nombre: _nombreCtrl.text.trim(),
+      apellido: _apellidoCtrl.text.trim(),
+      email: _emailCtrl.text.trim(),
+      telefono: _telCtrl.text.trim(),
+      cedula: _cedulaCtrl.text.trim(),
+      activo: true,
+      createdAt: DateTime.now(),
+    );
+    final data = residente.toJson();
 
     bool ok;
     if (widget.isEditing) {

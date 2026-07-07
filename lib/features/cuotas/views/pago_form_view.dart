@@ -74,11 +74,21 @@ class _PagoFormViewState extends State<PagoFormView> {
 
     bool ok;
     if (_isMarcarPagado) {
-      ok = await ctrl.marcarComoPagado(widget.pagoId!, {
-        'monto_abonado': monto,
-        'metodo_pago': _metodoPago,
-        'referencia': _referenciaCtrl.text.trim(),
-      });
+      final pago = Pago(
+        id: widget.pagoId!,
+        cuotaId: _cuotaId ?? '',
+        residenteId: _residenteId ?? '',
+        residenteNombre: '',
+        unidadNumero: '',
+        montoAbonado: monto,
+        montoPendiente: 0,
+        estado: 'pagado',
+        metodoPago: _metodoPago,
+        referencia: _referenciaCtrl.text.trim(),
+        fechaPago: DateTime.now(),
+        fechaVencimiento: DateTime.now(),
+      );
+      ok = await ctrl.marcarComoPagado(widget.pagoId!, pago.toJson());
     } else {
       if (_cuotaId == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -86,14 +96,21 @@ class _PagoFormViewState extends State<PagoFormView> {
         );
         return;
       }
-      ok = await ctrl.registrarPago({
-        'cuota_id': _cuotaId,
-        'residente_id': _residenteId,
-        'monto_abonado': monto,
-        'metodo_pago': _metodoPago,
-        'referencia': _referenciaCtrl.text.trim(),
-        'fecha_pago': DateTime.now().toIso8601String(),
-      });
+      final pago = Pago(
+        id: '',
+        cuotaId: _cuotaId!,
+        residenteId: _residenteId ?? '',
+        residenteNombre: '',
+        unidadNumero: '',
+        montoAbonado: monto,
+        montoPendiente: 0,
+        estado: 'pagado',
+        metodoPago: _metodoPago,
+        referencia: _referenciaCtrl.text.trim(),
+        fechaPago: DateTime.now(),
+        fechaVencimiento: DateTime.now(),
+      );
+      ok = await ctrl.registrarPago(pago.toJson());
     }
 
     if (ok && mounted) {

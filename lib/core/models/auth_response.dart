@@ -18,8 +18,13 @@ class AuthResponse extends Equatable {
   });
 
   factory AuthResponse.fromJson(Map<String, dynamic> json) {
+    final token = json['access_token'] ?? json['accessToken'] ?? json['token'] ?? '';
+    print('=== DEBUG LOGIN TOKEN ===');
+    print('Raw JSON: $json');
+    print('Extracted token: $token');
+    
     return AuthResponse(
-      accessToken: json['access_token'] ?? json['accessToken'] ?? '',
+      accessToken: token,
       refreshToken: json['refresh_token'] ?? json['refreshToken'],
       tokenType: json['token_type'] ?? json['tokenType'] ?? 'Bearer',
       expiresIn: json['expires_in'] ?? json['expiresIn'] ?? 3600,
