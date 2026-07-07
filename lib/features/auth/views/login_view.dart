@@ -30,7 +30,9 @@ class _LoginViewState extends State<LoginView>
   void initState() {
     super.initState();
     _animCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 700));
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
     _fadeAnim = CurvedAnimation(parent: _animCtrl, curve: Curves.easeOut);
     _animCtrl.forward();
   }
@@ -46,10 +48,7 @@ class _LoginViewState extends State<LoginView>
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) return;
     final ctrl = context.read<AuthController>();
-    await ctrl.login(
-      email: _emailCtrl.text.trim(),
-      password: _passCtrl.text,
-    );
+    await ctrl.login(email: _emailCtrl.text.trim(), password: _passCtrl.text);
     if (!mounted) return;
     if (ctrl.isAuthenticated && ctrl.currentUser != null) {
       context.go(AppRouter.getHomeRouteByRole(ctrl.currentUser!.rol));
@@ -235,7 +234,8 @@ class _LoginViewState extends State<LoginView>
   }
 
   String? _validateEmail(String? value) {
-    if (value == null || value.trim().isEmpty) return 'El usuario o correo es requerido';
+    if (value == null || value.trim().isEmpty)
+      return 'El usuario o correo es requerido';
     return null;
   }
 
@@ -253,9 +253,7 @@ class _DemoCredentials extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const creds = [
-      ('Admin', 'admin'),
-    ];
+    const creds = [('Admin', 'admin')];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -268,37 +266,41 @@ class _DemoCredentials extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        ...creds.map((c) => Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      c.$1,
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        color: AppTheme.primaryColor,
-                      ),
-                    ),
+        ...creds.map(
+          (c) => Padding(
+            padding: const EdgeInsets.only(bottom: 4),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
                   ),
-                  const SizedBox(width: 8),
-                  Text(
-                    c.$2,
+                  decoration: BoxDecoration(
+                    color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    c.$1,
                     style: const TextStyle(
-                      fontSize: 11,
-                      color: AppTheme.textSecondary,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.primaryColor,
                     ),
                   ),
-                ],
-              ),
-            )),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  c.$2,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppTheme.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -322,8 +324,7 @@ class _ErrorBanner extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.error_outline,
-              color: AppTheme.errorColor, size: 18),
+          const Icon(Icons.error_outline, color: AppTheme.errorColor, size: 18),
           const SizedBox(width: 8),
           Expanded(
             child: Text(

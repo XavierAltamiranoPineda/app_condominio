@@ -1,5 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:hive/hive.dart';
 
 import '../../constants/storage_keys.dart';
 
@@ -7,11 +7,11 @@ import '../../constants/storage_keys.dart';
 /// y refresca el token automáticamente si expira (401)
 class AuthInterceptor extends Interceptor {
   final Dio dio;
-  final FlutterSecureStorage storage;
+  final Box cacheBox;
   bool _isRefreshing = false;
   final List<RequestOptions> _pendingRequests = [];
 
-  AuthInterceptor({required this.dio, required this.storage});
+  AuthInterceptor({required this.dio}) : cacheBox = Hive.box('app_cache');
 
   @override
   Future<void> onRequest(
@@ -24,7 +24,7 @@ class AuthInterceptor extends Interceptor {
         options.path.contains('/auth/forgot-password');
 
     if (!isPublicRoute) {
-      final token = await storage.read(key: StorageKeys.accessToken);
+      final token = cacheBox.get(StorageKeys.accessToken);
       if (token != null) {
         options.headers['Authorization'] = 'Bearer $token';
       }
@@ -42,7 +42,7 @@ class AuthInterceptor extends Interceptor {
       _isRefreshing = true;
 
       try {
-        final refreshToken = await storage.read(key: StorageKeys.refreshToken);
+        final refreshToken = cacheBox.get(StorageKeys.refreshToken);
         if (refreshToken == null) {
           _isRefreshing = false;
           handler.reject(err);
@@ -56,14 +56,13 @@ class AuthInterceptor extends Interceptor {
         );
 
         if (response.statusCode == 200) {
-          final newAccessToken = response.data['access_token'];
-          final newRefreshToken = response.data['refresh_token'];
+          final responseData = response.data.containsKey('data') ? response.data['data'] : response.data;
+          final newAccessToken = responseData['accessToken'] ?? responseData['access_token'];
+          final newRefreshToken = responseData['refreshToken'] ?? responseData['refresh_token'];
 
-          await storage.write(
-              key: StorageKeys.accessToken, value: newAccessToken);
+          await cacheBox.put(StorageKeys.accessToken, newAccessToken);
           if (newRefreshToken != null) {
-            await storage.write(
-                key: StorageKeys.refreshToken, value: newRefreshToken);
+            await cacheBox.put(StorageKeys.refreshToken, newRefreshToken);
           }
 
           // Reintentar request original
@@ -88,8 +87,8 @@ class AuthInterceptor extends Interceptor {
   }
 
   Future<void> _clearTokens() async {
-    await storage.delete(key: StorageKeys.accessToken);
-    await storage.delete(key: StorageKeys.refreshToken);
-    await storage.delete(key: StorageKeys.userData);
+    await cacheBox.delete(StorageKeys.accessToken);
+    await cacheBox.delete(StorageKeys.refreshToken);
+    await cacheBox.delete(StorageKeys.userData);
   }
 }

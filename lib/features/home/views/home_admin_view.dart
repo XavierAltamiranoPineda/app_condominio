@@ -94,7 +94,7 @@ class _HomeAdminViewState extends State<HomeAdminView> {
               setState(() => _selectedIndex = 0);
               context.push(AppRoutes.cuotas);
             case 4:
-              _showMoreMenu(context);
+              _showMoreMenu(context, user);
             default:
               setState(() => _selectedIndex = index);
           }
@@ -108,12 +108,14 @@ class _HomeAdminViewState extends State<HomeAdminView> {
         surfaceTintColor: Colors.transparent,
         elevation: 8,
       ),
-      floatingActionButton: FloatingActionButton(
-        heroTag: 'admin_fab',
-        onPressed: () => _showQuickActions(context),
-        tooltip: 'Acciones rápidas',
-        child: const Icon(Icons.add_rounded),
-      ),
+      floatingActionButton: user?.esGuardia == true
+          ? null // Los guardias no tienen acciones rápidas
+          : FloatingActionButton(
+              heroTag: 'admin_fab',
+              onPressed: () => _showQuickActions(context, user),
+              tooltip: 'Acciones rápidas',
+              child: const Icon(Icons.add_rounded),
+            ),
     );
   }
 
@@ -344,21 +346,21 @@ class _HomeAdminViewState extends State<HomeAdminView> {
     );
   }
 
-  void _showQuickActions(BuildContext context) {
+  void _showQuickActions(BuildContext context, dynamic user) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _QuickActionsSheet(),
+      builder: (_) => _QuickActionsSheet(user: user),
     );
   }
 
-  void _showMoreMenu(BuildContext context) {
+  void _showMoreMenu(BuildContext context, dynamic user) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _MoreMenuSheet(),
+      builder: (_) => _MoreMenuSheet(user: user),
     );
   }
 
@@ -373,6 +375,9 @@ class _HomeAdminViewState extends State<HomeAdminView> {
 }
 
 class _QuickActionsSheet extends StatelessWidget {
+  final dynamic user;
+  const _QuickActionsSheet({required this.user});
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -388,24 +393,26 @@ class _QuickActionsSheet extends StatelessWidget {
         children: [
           Text('Crear nuevo', style: theme.textTheme.headlineSmall),
           const SizedBox(height: 16),
-          _ActionTile(
-            icon: Icons.person_add_rounded,
-            label: 'Nuevo residente',
-            color: AppTheme.primaryColor,
-            onTap: () {
-              Navigator.pop(context);
-              context.push(AppRoutes.residenteNuevo);
-            },
-          ),
-          _ActionTile(
-            icon: Icons.payments_rounded,
-            label: 'Registrar pago',
-            color: AppTheme.successColor,
-            onTap: () {
-              Navigator.pop(context);
-              context.push(AppRoutes.pagoNuevo);
-            },
-          ),
+          if (user?.esAdmin == true)
+            _ActionTile(
+              icon: Icons.person_add_rounded,
+              label: 'Nuevo residente',
+              color: AppTheme.primaryColor,
+              onTap: () {
+                Navigator.pop(context);
+                context.push(AppRoutes.residenteNuevo);
+              },
+            ),
+          if (user?.esAdmin == true)
+            _ActionTile(
+              icon: Icons.payments_rounded,
+              label: 'Registrar pago',
+              color: AppTheme.successColor,
+              onTap: () {
+                Navigator.pop(context);
+                context.push(AppRoutes.pagoNuevo);
+              },
+            ),
           _ActionTile(
             icon: Icons.report_rounded,
             label: 'Nueva incidencia',
@@ -415,15 +422,16 @@ class _QuickActionsSheet extends StatelessWidget {
               context.push(AppRoutes.incidenciaNueva);
             },
           ),
-          _ActionTile(
-            icon: Icons.campaign_rounded,
-            label: 'Publicar aviso',
-            color: AppTheme.infoColor,
-            onTap: () {
-              Navigator.pop(context);
-              context.push(AppRoutes.avisoNuevo);
-            },
-          ),
+          if (user?.esAdmin == true)
+            _ActionTile(
+              icon: Icons.campaign_rounded,
+              label: 'Publicar aviso',
+              color: AppTheme.infoColor,
+              onTap: () {
+                Navigator.pop(context);
+                context.push(AppRoutes.avisoNuevo);
+              },
+            ),
           const SizedBox(height: 8),
         ],
       ),
@@ -432,6 +440,9 @@ class _QuickActionsSheet extends StatelessWidget {
 }
 
 class _MoreMenuSheet extends StatelessWidget {
+  final dynamic user;
+  const _MoreMenuSheet({required this.user});
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -444,42 +455,46 @@ class _MoreMenuSheet extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _ActionTile(
-            icon: Icons.report_problem_rounded,
-            label: 'Incidencias',
-            color: AppTheme.warningColor,
-            onTap: () {
-              Navigator.pop(context);
-              context.push(AppRoutes.incidencias);
-            },
-          ),
-          _ActionTile(
-            icon: Icons.campaign_rounded,
-            label: 'Avisos',
-            color: AppTheme.infoColor,
-            onTap: () {
-              Navigator.pop(context);
-              context.push(AppRoutes.avisos);
-            },
-          ),
-          _ActionTile(
-            icon: Icons.calendar_month_rounded,
-            label: 'Reservas',
-            color: AppTheme.accentColor,
-            onTap: () {
-              Navigator.pop(context);
-              context.push(AppRoutes.reservas);
-            },
-          ),
-          _ActionTile(
-            icon: Icons.security_rounded,
-            label: 'Visitas / Seguridad',
-            color: AppTheme.primaryColor,
-            onTap: () {
-              Navigator.pop(context);
-              context.push(AppRoutes.visitas);
-            },
-          ),
+          if (user?.esGuardia != true)
+            _ActionTile(
+              icon: Icons.report_problem_rounded,
+              label: 'Incidencias',
+              color: AppTheme.warningColor,
+              onTap: () {
+                Navigator.pop(context);
+                context.push(AppRoutes.incidencias);
+              },
+            ),
+          if (user?.esGuardia != true)
+            _ActionTile(
+              icon: Icons.campaign_rounded,
+              label: 'Avisos',
+              color: AppTheme.infoColor,
+              onTap: () {
+                Navigator.pop(context);
+                context.push(AppRoutes.avisos);
+              },
+            ),
+          if (user?.esGuardia != true)
+            _ActionTile(
+              icon: Icons.calendar_month_rounded,
+              label: 'Reservas',
+              color: AppTheme.accentColor,
+              onTap: () {
+                Navigator.pop(context);
+                context.push(AppRoutes.reservas);
+              },
+            ),
+          if (user?.esAdmin == true || user?.esGuardia == true)
+            _ActionTile(
+              icon: Icons.security_rounded,
+              label: 'Visitas / Seguridad',
+              color: AppTheme.primaryColor,
+              onTap: () {
+                Navigator.pop(context);
+                context.push(AppRoutes.visitas);
+              },
+            ),
           _ActionTile(
             icon: Icons.settings_rounded,
             label: 'Configuración',

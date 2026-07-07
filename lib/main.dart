@@ -33,6 +33,7 @@ Future<void> main() async {
 
   // Inicializar Hive (cache local)
   await Hive.initFlutter();
+  await Hive.openBox('app_cache');
 
   // Orientación preferida
   await SystemChrome.setPreferredOrientations([

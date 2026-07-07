@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import '../constants/storage_keys.dart';
 import 'interceptors/auth_interceptor.dart';
@@ -11,7 +10,6 @@ import 'interceptors/logging_interceptor.dart';
 /// Incluye interceptores para auth, errores y logging
 class DioClient {
   static Dio? _instance;
-  static const _storage = FlutterSecureStorage();
 
   static Dio get instance {
     _instance ??= _createDio();
@@ -39,7 +37,7 @@ class DioClient {
 
     // Agregar interceptores en orden
     dio.interceptors.addAll([
-      AuthInterceptor(dio: dio, storage: _storage),
+      AuthInterceptor(dio: dio),
       ErrorInterceptor(),
       LoggingInterceptor(),
     ]);

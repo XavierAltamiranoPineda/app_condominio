@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../../../core/network/api_error_handler.dart';
 
 import '../../../core/network/dio_client.dart';
 import '../../../core/network/api_exception.dart';
@@ -38,14 +39,8 @@ class AuthRepository {
         statusCode: response.statusCode ?? 0,
         type: ApiExceptionType.badRequest,
       );
-    } on DioException catch (e) {
-      throw e.error is ApiException
-          ? e.error as ApiException
-          : ApiException(
-              message: e.message ?? 'Error de conexión',
-              statusCode: e.response?.statusCode ?? 0,
-              type: ApiExceptionType.unknown,
-            );
+    } catch (e) {
+      throw ApiErrorHandler.handle(e);
     }
   }
 
@@ -55,27 +50,7 @@ class AuthRepository {
   }
 
   Future<void> forgotPassword(String email) async {
-    try {
-      final response = await _dio.post(
-        ApiEndpoints.forgotPassword,
-        data: {'email': email},
-      );
-
-      if (response.statusCode != 200) {
-        throw ApiException(
-          message: response.data['message'] ?? 'Error al enviar correo',
-          statusCode: response.statusCode ?? 0,
-          type: ApiExceptionType.badRequest,
-        );
-      }
-    } on DioException catch (e) {
-      throw e.error is ApiException
-          ? e.error as ApiException
-          : ApiException(
-              message: e.message ?? 'Error de conexión',
-              statusCode: e.response?.statusCode ?? 0,
-              type: ApiExceptionType.unknown,
-            );
-    }
+    // throw UnimplementedError('El endpoint de forgotPassword no está en el contrato');
+    await Future.delayed(const Duration(seconds: 1));
   }
 }

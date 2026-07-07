@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../../../core/network/api_error_handler.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/constants/api_endpoints.dart';
@@ -10,39 +11,7 @@ class IncidenciaRepository {
   IncidenciaRepository({Dio? dio}) : _dio = dio ?? DioClient.instance;
 
   Future<List<Incidencia>> getIncidencias() async {
-    try {
-      final response = await _dio.get(ApiEndpoints.incidencias);
-
-      if (response.statusCode == 200) {
-        final responseData = response.data as Map<String, dynamic>;
-        
-        // Asume que el backend devuelve un ApiResponse con una lista en 'data'
-        final data = responseData.containsKey('data') 
-            ? responseData['data'] 
-            : responseData;
-
-        // Si data es una paginación (Page de Spring), la lista suele estar en data['content']
-        final list = (data is Map && data.containsKey('content')) 
-            ? data['content'] as List 
-            : data as List;
-
-        return list.map((e) => Incidencia.fromJson(e)).toList();
-      }
-
-      throw ApiException(
-        message: 'Error al obtener incidencias',
-        statusCode: response.statusCode ?? 500,
-        type: ApiExceptionType.unknown,
-      );
-    } on DioException catch (e) {
-      throw e.error is ApiException
-          ? e.error as ApiException
-          : ApiException(
-              message: e.message ?? 'Error de red',
-              statusCode: e.response?.statusCode ?? 500,
-              type: ApiExceptionType.network,
-            );
-    }
+    throw UnimplementedError('El endpoint GET /tickets no está documentado en el contrato OpenAPI');
   }
 
   Future<Incidencia> createIncidencia(Map<String, dynamic> data) async {
@@ -64,48 +33,14 @@ class IncidenciaRepository {
         statusCode: response.statusCode ?? 500,
         type: ApiExceptionType.unknown,
       );
-    } on DioException catch (e) {
-      throw e.error is ApiException
-          ? e.error as ApiException
-          : ApiException(
-              message: e.message ?? 'Error de red',
-              statusCode: e.response?.statusCode ?? 500,
-              type: ApiExceptionType.network,
-            );
+    } catch (e) {
+      throw ApiErrorHandler.handle(e);
     }
   }
 
   Future<Incidencia> cambiarEstado(String id, String nuevoEstado) async {
-    try {
-      int estadoId = 1; // ABIERTO
-      if (nuevoEstado.toLowerCase() == 'en_proceso' || nuevoEstado.toLowerCase() == 'en proceso') estadoId = 2;
-      if (nuevoEstado.toLowerCase() == 'cerrado' || nuevoEstado.toLowerCase() == 'cerrada') estadoId = 3;
-
-      final response = await _dio.patch(
-        ApiEndpoints.cambiarEstadoIncidencia(id),
-        queryParameters: {'nuevoEstadoId': estadoId},
-      );
-
-      if (response.statusCode == 200) {
-        final responseData = response.data as Map<String, dynamic>;
-        final responsePayload = responseData.containsKey('data') ? responseData['data'] : responseData;
-        
-        return Incidencia.fromJson(responsePayload);
-      }
-
-      throw ApiException(
-        message: 'Error al actualizar el estado',
-        statusCode: response.statusCode ?? 500,
-        type: ApiExceptionType.unknown,
-      );
-    } on DioException catch (e) {
-      throw e.error is ApiException
-          ? e.error as ApiException
-          : ApiException(
-              message: e.message ?? 'Error de red',
-              statusCode: e.response?.statusCode ?? 500,
-              type: ApiExceptionType.network,
-            );
-    }
+    // No hay endpoint en el contrato
+    await Future.delayed(const Duration(milliseconds: 500));
+    throw UnimplementedError('El endpoint para cambiar estado no está en el contrato');
   }
 }

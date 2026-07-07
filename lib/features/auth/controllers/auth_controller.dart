@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:hive/hive.dart';
 
 import '../../../core/models/usuario.dart';
 import '../../../core/models/auth_response.dart';
@@ -15,7 +15,7 @@ import '../repositories/auth_repository.dart';
 /// También extiende Listenable para go_router refresh
 class AuthController extends ChangeNotifier {
   final AuthRepository _repository;
-  final FlutterSecureStorage _storage;
+  final Box _cacheBox;
 
   AuthState _state = const AuthState.initial();
   Usuario? _currentUser;
@@ -23,9 +23,8 @@ class AuthController extends ChangeNotifier {
 
   AuthController({
     AuthRepository? repository,
-    FlutterSecureStorage? storage,
   })  : _repository = repository ?? AuthRepository(),
-        _storage = storage ?? const FlutterSecureStorage() {
+        _cacheBox = Hive.box('app_cache') {
     _checkStoredSession();
   }
 
@@ -39,8 +38,8 @@ class AuthController extends ChangeNotifier {
 
   // ─── Verificar sesión almacenada ──────────────────────────────
   Future<void> _checkStoredSession() async {
-    final token = await _storage.read(key: StorageKeys.accessToken);
-    final userData = await _storage.read(key: StorageKeys.userData);
+    final token = _cacheBox.get(StorageKeys.accessToken);
+    final userData = _cacheBox.get(StorageKeys.userData);
 
     if (token != null && userData != null) {
       try {
@@ -114,30 +113,27 @@ class AuthController extends ChangeNotifier {
   // ─── Actualizar perfil local ───────────────────────────────────
   Future<void> updateLocalUser(Usuario updatedUser) async {
     _currentUser = updatedUser;
-    await _storage.write(
-      key: StorageKeys.userData,
-      value: jsonEncode(updatedUser.toJson()),
+    await _cacheBox.put(
+      StorageKeys.userData,
+      jsonEncode(updatedUser.toJson()),
     );
     notifyListeners();
   }
 
   // ─── Helpers privados ─────────────────────────────────────────
   Future<void> _saveSession(AuthResponse response) async {
-    await _storage.write(
-        key: StorageKeys.accessToken, value: response.accessToken);
+    await _cacheBox.put(StorageKeys.accessToken, response.accessToken);
     if (response.refreshToken != null) {
-      await _storage.write(
-          key: StorageKeys.refreshToken, value: response.refreshToken!);
+      await _cacheBox.put(StorageKeys.refreshToken, response.refreshToken!);
     }
-    await _storage.write(
-      key: StorageKeys.userData,
-      value: jsonEncode(response.usuario.toJson()),
+    await _cacheBox.put(
+      StorageKeys.userData,
+      jsonEncode(response.usuario.toJson()),
     );
-    await _storage.write(
-        key: StorageKeys.userRole, value: response.usuario.rol);
+    await _cacheBox.put(StorageKeys.userRole, response.usuario.rol);
   }
 
   Future<void> _clearSession() async {
-    await _storage.deleteAll();
+    await _cacheBox.clear();
   }
 }

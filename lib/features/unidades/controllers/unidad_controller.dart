@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
-import '../../../core/mock/mock_service.dart';
 import '../models/unidad.dart';
+import '../repositories/unidad_repository.dart';
 
 enum UnidadViewState { idle, loading, success, error }
 
 class UnidadController extends ChangeNotifier {
-  final _mock = MockService.instance;
+  final UnidadRepository _repository;
+
+  UnidadController({UnidadRepository? repository}) 
+      : _repository = repository ?? UnidadRepository();
 
   List<Unidad> _unidades = [];
-  Unidad? _selected;
+  Unidad? _selectedUnidad;
   UnidadViewState _state = UnidadViewState.idle;
   String? _errorMessage;
   String _searchQuery = '';
@@ -16,24 +19,25 @@ class UnidadController extends ChangeNotifier {
   List<Unidad> get unidades {
     if (_searchQuery.isEmpty) return _unidades;
     final q = _searchQuery.toLowerCase();
-    return _unidades
-        .where((u) =>
-            u.numero.toLowerCase().contains(q) ||
-            (u.residenteNombre?.toLowerCase().contains(q) ?? false) ||
-            (u.piso?.contains(q) ?? false))
-        .toList();
+    return _unidades.where((u) {
+      return u.numero.toLowerCase().contains(q) ||
+          (u.residenteNombre?.toLowerCase().contains(q) ?? false);
+    }).toList();
   }
 
-  List<Unidad> get disponibles => unidades.where((u) => u.disponible).toList();
-  List<Unidad> get ocupadas => unidades.where((u) => u.ocupada).toList();
+  List<Unidad> get ocupadas => _unidades.where((u) => u.ocupada).toList();
+  List<Unidad> get disponibles => _unidades.where((u) => u.disponible).toList();
 
+  Unidad? get selectedUnidad => _selectedUnidad;
   UnidadViewState get state => _state;
   String? get errorMessage => _errorMessage;
   bool get isLoading => _state == UnidadViewState.loading;
-  Unidad? get selected => _selected;
 
-  void setSearch(String q) {
-    _searchQuery = q;
+  int get ocupadasCount => _unidades.where((u) => u.ocupada).length;
+  int get desocupadasCount => _unidades.where((u) => !u.ocupada).length;
+
+  void setSearch(String query) {
+    _searchQuery = query;
     notifyListeners();
   }
 
@@ -41,54 +45,57 @@ class UnidadController extends ChangeNotifier {
     _state = UnidadViewState.loading;
     _errorMessage = null;
     notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 300));
-    _unidades = []; // TODO: Integrate with backend UnidadRepository
-    _state = UnidadViewState.success;
+    try {
+      _unidades = await _repository.getUnidades();
+      _state = UnidadViewState.success;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _state = UnidadViewState.error;
+    }
+    notifyListeners();
+  }
+
+  Future<void> fetchUnidadById(String id) async {
+    _selectedUnidad = _unidades.cast<Unidad?>().firstWhere(
+      (u) => u?.id == id,
+      orElse: () => null,
+    );
     notifyListeners();
   }
 
   Future<bool> createUnidad(Map<String, dynamic> data) async {
     _state = UnidadViewState.loading;
     notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 300));
-    final nueva = _mock.createUnidad(data);
-    _unidades.insert(0, nueva);
-    _state = UnidadViewState.success;
+    try {
+      final nueva = await _repository.createUnidad(data);
+      _unidades.insert(0, nueva);
+      _state = UnidadViewState.success;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _state = UnidadViewState.error;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> deleteUnidad(String id) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+    // Simulated delete for now
+    _unidades.removeWhere((u) => u.id == id);
     notifyListeners();
     return true;
   }
 
   Future<bool> updateUnidad(String id, Map<String, dynamic> data) async {
-    _state = UnidadViewState.loading;
-    notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 300));
-    final updated = _mock.updateUnidad(id, data);
-    if (updated == null) {
-      _state = UnidadViewState.error;
-      _errorMessage = 'No se encontró la unidad';
-      notifyListeners();
-      return false;
-    }
-    final idx = _unidades.indexWhere((u) => u.id == id);
-    if (idx != -1) _unidades[idx] = updated;
-    _selected = updated;
-    _state = UnidadViewState.success;
-    notifyListeners();
+    await Future.delayed(const Duration(milliseconds: 200));
+    // Simulated update
     return true;
   }
 
-  Future<bool> deleteUnidad(String id) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    final ok = _mock.deleteUnidad(id);
-    if (ok) {
-      _unidades.removeWhere((u) => u.id == id);
-      notifyListeners();
-    }
-    return ok;
-  }
-
   void selectUnidad(Unidad u) {
-    _selected = u;
+    _selectedUnidad = u;
     notifyListeners();
   }
 }

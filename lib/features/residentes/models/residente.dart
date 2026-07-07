@@ -32,32 +32,36 @@ class Residente extends Equatable {
 
   String get nombreCompleto => '$nombre $apellido';
 
-  factory Residente.fromJson(Map<String, dynamic> json) => Residente(
-        id: json['id'].toString(),
-        nombre: json['nombre'] ?? '',
-        apellido: json['apellido'] ?? '',
-        email: json['email'] ?? '',
-        telefono: json['telefono'] ?? '',
-        unidadId: json['unidad_id']?.toString(),
+  factory Residente.fromJson(Map<String, dynamic> json) {
+    final persona = json['persona'] ?? {};
+    return Residente(
+        id: json['id']?.toString() ?? '',
+        nombre: persona['nombres'] ?? json['nombre'] ?? '',
+        apellido: persona['apellidos'] ?? json['apellido'] ?? '',
+        email: persona['correo'] ?? json['email'] ?? '',
+        telefono: persona['telefono'] ?? json['telefono'] ?? '',
+        unidadId: json['idUnidad']?.toString() ?? json['unidad_id']?.toString(),
         unidadNumero: json['unidad_numero'],
         activo: json['activo'] ?? true,
         avatarUrl: json['avatar_url'],
-        cedula: json['cedula'],
-        fechaIngreso: json['fecha_ingreso'] != null
-            ? DateTime.tryParse(json['fecha_ingreso'])
+        cedula: json['numeroIdentificacion'] ?? json['cedula'],
+        fechaIngreso: json['fechaIngreso'] != null
+            ? DateTime.tryParse(json['fechaIngreso'])
             : null,
         createdAt:
-            DateTime.tryParse(json['created_at'] ?? '') ?? DateTime.now(),
+            DateTime.tryParse(json['fechaIngreso'] ?? json['created_at'] ?? '') ?? DateTime.now(),
       );
+  }
 
   Map<String, dynamic> toJson() => {
-        'nombre': nombre,
-        'apellido': apellido,
-        'email': email,
+        'tipoIdentificacion': 'CEDULA',
+        'numeroIdentificacion': cedula,
+        'nombres': nombre,
+        'apellidos': apellido,
+        'correo': email,
         'telefono': telefono,
-        'unidad_id': unidadId,
-        'activo': activo,
-        'cedula': cedula,
+        'esPropietario': false,
+        'idUnidad': unidadId != null ? int.tryParse(unidadId!) : null,
       };
 
   Residente copyWith({

@@ -31,12 +31,43 @@ class CuotaController extends ChangeNotifier {
   double get montoPendienteTotal =>
       _pagos.fold(0, (s, p) => s + p.montoPendiente);
 
-  Future<void> fetchCuotas() async {
+  int _currentPage = 0;
+  bool _hasMoreCuotas = true;
+  String _searchQuery = '';
+
+  bool get hasMoreCuotas => _hasMoreCuotas;
+  String get searchQuery => _searchQuery;
+
+  void setSearchQuery(String query) {
+    _searchQuery = query;
+    fetchCuotas(isRefresh: true);
+  }
+
+  Future<void> fetchCuotas({bool isRefresh = false}) async {
+    if (isRefresh) {
+      _currentPage = 0;
+      _hasMoreCuotas = true;
+      _cuotas.clear();
+    } else if (!_hasMoreCuotas || isLoading) {
+      return;
+    }
+
     _state = CuotaViewState.loading;
     _errorMessage = null;
     notifyListeners();
     try {
-      _cuotas = await _repository.getCuotas();
+      final nuevas = await _repository.getCuotas(
+        page: _currentPage,
+        size: 10,
+        search: _searchQuery,
+      );
+      
+      if (nuevas.length < 10) {
+        _hasMoreCuotas = false;
+      }
+      
+      _cuotas.addAll(nuevas);
+      _currentPage++;
       _state = CuotaViewState.success;
     } catch (e) {
       _errorMessage = e.toString();

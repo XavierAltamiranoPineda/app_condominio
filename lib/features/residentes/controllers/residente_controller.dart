@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
-import '../../../core/mock/mock_service.dart';
 import '../models/residente.dart';
+import '../repositories/residente_repository.dart';
 
 enum ResidenteViewState { idle, loading, success, error }
 
 class ResidenteController extends ChangeNotifier {
-  final _mock = MockService.instance;
+  final ResidenteRepository _repository;
+
+  ResidenteController({ResidenteRepository? repository}) 
+      : _repository = repository ?? ResidenteRepository();
 
   List<Residente> _residentes = [];
   Residente? _selectedResidente;
@@ -41,59 +44,75 @@ class ResidenteController extends ChangeNotifier {
     _state = ResidenteViewState.loading;
     _errorMessage = null;
     notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 300));
-    _residentes = []; // TODO: Integrate with backend ResidenteRepository
-    _state = ResidenteViewState.success;
+    
+    try {
+      _residentes = await _repository.getResidentes();
+      _state = ResidenteViewState.success;
+    } catch (e) {
+      _state = ResidenteViewState.error;
+      _errorMessage = e.toString();
+    }
     notifyListeners();
   }
 
   Future<void> fetchResidenteById(String id) async {
-    _state = ResidenteViewState.loading;
-    notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 200));
-    _selectedResidente = _mock.getResidenteById(id);
-    _state = ResidenteViewState.success;
+    // La API actual no tiene un endpoint específico en el contrato, buscamos localmente
+    _selectedResidente = _residentes.cast<Residente?>().firstWhere(
+      (r) => r?.id == id,
+      orElse: () => null,
+    );
     notifyListeners();
   }
 
   Future<bool> createResidente(Map<String, dynamic> data) async {
     _state = ResidenteViewState.loading;
     notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 300));
-    final nuevo = _mock.createResidente(data);
-    _residentes.insert(0, nuevo);
-    _state = ResidenteViewState.success;
-    notifyListeners();
-    return true;
+    
+    try {
+      final nuevo = await _repository.createResidente(data);
+      _residentes.insert(0, nuevo);
+      _state = ResidenteViewState.success;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _state = ResidenteViewState.error;
+      _errorMessage = e.toString();
+      notifyListeners();
+      return false;
+    }
   }
 
   Future<bool> updateResidente(String id, Map<String, dynamic> data) async {
     _state = ResidenteViewState.loading;
     notifyListeners();
-    await Future.delayed(const Duration(milliseconds: 300));
-    final updated = _mock.updateResidente(id, data);
-    if (updated == null) {
+    
+    try {
+      final updated = await _repository.updateResidente(id, data);
+      final idx = _residentes.indexWhere((r) => r.id == id);
+      if (idx != -1) _residentes[idx] = updated;
+      _selectedResidente = updated;
+      _state = ResidenteViewState.success;
+      notifyListeners();
+      return true;
+    } catch (e) {
       _state = ResidenteViewState.error;
-      _errorMessage = 'No se encontró el residente';
+      _errorMessage = e.toString();
       notifyListeners();
       return false;
     }
-    final idx = _residentes.indexWhere((r) => r.id == id);
-    if (idx != -1) _residentes[idx] = updated;
-    _selectedResidente = updated;
-    _state = ResidenteViewState.success;
-    notifyListeners();
-    return true;
   }
 
   Future<bool> deleteResidente(String id) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    final ok = _mock.deleteResidente(id);
-    if (ok) {
-      _residentes.removeWhere((r) => r.id == id);
-      notifyListeners();
+    try {
+      final ok = await _repository.deleteResidente(id);
+      if (ok) {
+        _residentes.removeWhere((r) => r.id == id);
+        notifyListeners();
+      }
+      return ok;
+    } catch (e) {
+      return false;
     }
-    return ok;
   }
 
   Future<bool> toggleEstado(String id) async {

@@ -85,6 +85,12 @@ class ErrorInterceptor extends Interceptor {
           statusCode: statusCode,
           type: ApiExceptionType.notFound,
         );
+      case 409:
+        return ApiException(
+          message: message.isEmpty ? 'Conflicto: El recurso ya existe o el estado es inválido.' : message,
+          statusCode: statusCode,
+          type: ApiExceptionType.unknown, // Se podría agregar ApiExceptionType.conflict
+        );
       case 422:
         return ApiException(
           message: message.isEmpty ? 'Datos inválidos.' : message,

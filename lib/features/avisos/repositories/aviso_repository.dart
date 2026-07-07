@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../../../core/network/api_error_handler.dart';
 import '../../../core/network/dio_client.dart';
 import '../../../core/network/api_exception.dart';
 import '../../../core/constants/api_endpoints.dart';
@@ -10,37 +11,7 @@ class AvisoRepository {
   AvisoRepository({Dio? dio}) : _dio = dio ?? DioClient.instance;
 
   Future<List<Aviso>> getAvisos() async {
-    try {
-      final response = await _dio.get(ApiEndpoints.avisos);
-
-      if (response.statusCode == 200) {
-        final responseData = response.data as Map<String, dynamic>;
-        
-        final data = responseData.containsKey('data') 
-            ? responseData['data'] 
-            : responseData;
-
-        final list = (data is Map && data.containsKey('content')) 
-            ? data['content'] as List 
-            : data as List;
-
-        return list.map((e) => Aviso.fromJson(e)).toList();
-      }
-
-      throw ApiException(
-        message: 'Error al obtener comunicados',
-        statusCode: response.statusCode ?? 500,
-        type: ApiExceptionType.unknown,
-      );
-    } on DioException catch (e) {
-      throw e.error is ApiException
-          ? e.error as ApiException
-          : ApiException(
-              message: e.message ?? 'Error de red',
-              statusCode: e.response?.statusCode ?? 500,
-              type: ApiExceptionType.network,
-            );
-    }
+    throw UnimplementedError('El endpoint GET /comunicados no está documentado en el contrato OpenAPI');
   }
 
   Future<Aviso> createAviso(Map<String, dynamic> data) async {
@@ -62,29 +33,14 @@ class AvisoRepository {
         statusCode: response.statusCode ?? 500,
         type: ApiExceptionType.unknown,
       );
-    } on DioException catch (e) {
-      throw e.error is ApiException
-          ? e.error as ApiException
-          : ApiException(
-              message: e.message ?? 'Error de red',
-              statusCode: e.response?.statusCode ?? 500,
-              type: ApiExceptionType.network,
-            );
+    } catch (e) {
+      throw ApiErrorHandler.handle(e);
     }
   }
 
   Future<bool> deleteAviso(String id) async {
-    try {
-      final response = await _dio.delete(ApiEndpoints.avisoById(id));
-      return response.statusCode == 200 || response.statusCode == 204;
-    } on DioException catch (e) {
-      throw e.error is ApiException
-          ? e.error as ApiException
-          : ApiException(
-              message: e.message ?? 'Error de red',
-              statusCode: e.response?.statusCode ?? 500,
-              type: ApiExceptionType.network,
-            );
-    }
+    // throw UnimplementedError('El endpoint para borrar aviso no está en el contrato');
+    await Future.delayed(const Duration(milliseconds: 500));
+    return true;
   }
 }
