@@ -25,8 +25,8 @@ class ResidenteController extends ChangeNotifier {
     final q = _searchQuery.toLowerCase();
     return _residentes.where((r) {
       return r.nombreCompleto.toLowerCase().contains(q) ||
-          r.email.toLowerCase().contains(q) ||
-          (r.unidadNumero?.toLowerCase().contains(q) ?? false);
+          r.correo.toLowerCase().contains(q) ||
+          r.numeroIdentificacion.toLowerCase().contains(q);
     }).toList();
   }
 
@@ -56,16 +56,30 @@ class ResidenteController extends ChangeNotifier {
   }
 
   Future<void> fetchResidenteById(String id) async {
-    // La API actual no tiene un endpoint específico en el contrato, buscamos localmente
+    // Primero buscamos localmente
     _selectedResidente = _residentes.cast<Residente?>().firstWhere(
-      (r) => r?.id == id,
+      (r) => r?.idString == id,
       orElse: () => null,
     );
+    
+    // Si no se encontró localmente, intentar desde el API
+    if (_selectedResidente == null) {
+      final intId = int.tryParse(id);
+      if (intId != null) {
+        try {
+          _selectedResidente = await _repository.getResidenteById(intId);
+        } catch (_) {
+          // Si falla, queda como null
+        }
+      }
+    }
+    
     notifyListeners();
   }
 
   Future<bool> createResidente(Map<String, dynamic> data) async {
     _state = ResidenteViewState.loading;
+    _errorMessage = null;
     notifyListeners();
     
     try {
@@ -84,11 +98,12 @@ class ResidenteController extends ChangeNotifier {
 
   Future<bool> updateResidente(String id, Map<String, dynamic> data) async {
     _state = ResidenteViewState.loading;
+    _errorMessage = null;
     notifyListeners();
     
     try {
       final updated = await _repository.updateResidente(id, data);
-      final idx = _residentes.indexWhere((r) => r.id == id);
+      final idx = _residentes.indexWhere((r) => r.idString == id);
       if (idx != -1) _residentes[idx] = updated;
       _selectedResidente = updated;
       _state = ResidenteViewState.success;
@@ -106,7 +121,7 @@ class ResidenteController extends ChangeNotifier {
     try {
       final ok = await _repository.deleteResidente(id);
       if (ok) {
-        _residentes.removeWhere((r) => r.id == id);
+        _residentes.removeWhere((r) => r.idString == id);
         notifyListeners();
       }
       return ok;
@@ -116,8 +131,10 @@ class ResidenteController extends ChangeNotifier {
   }
 
   Future<bool> toggleEstado(String id) async {
-    final r = _residentes.firstWhere((r) => r.id == id);
-    return updateResidente(id, {'activo': !r.activo});
+    final r = _residentes.firstWhere((r) => r.idString == id);
+    final nuevoEstado = r.activo ? 'INACTIVO' : 'ACTIVO';
+    final data = r.copyWith(estado: nuevoEstado).toJson();
+    return updateResidente(id, data);
   }
 
   void clearSelected() {

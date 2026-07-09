@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/loading_overlay.dart';
 import '../controllers/residente_controller.dart';
 import '../models/residente.dart';
 
@@ -64,7 +63,7 @@ class _ResidentesListViewState extends State<ResidentesListView>
               key: const Key('residentes_search'),
               controller: _searchCtrl,
               decoration: InputDecoration(
-                hintText: 'Buscar por nombre, email o unidad...',
+                hintText: 'Buscar por nombre, correo o identificación...',
                 prefixIcon: const Icon(Icons.search_rounded),
                 suffixIcon: _searchCtrl.text.isNotEmpty
                     ? IconButton(
@@ -101,7 +100,12 @@ class _ResidentesListViewState extends State<ResidentesListView>
       floatingActionButton: FloatingActionButton.extended(
         key: const Key('add_residente_fab'),
         heroTag: 'residentes_fab',
-        onPressed: () => context.push(AppRoutes.residenteNuevo),
+        onPressed: () async {
+          await context.push(AppRoutes.residenteNuevo);
+          if (mounted) {
+            context.read<ResidenteController>().fetchResidentes();
+          }
+        },
         icon: const Icon(Icons.person_add_rounded),
         label: const Text('Nuevo'),
       ),
@@ -110,15 +114,26 @@ class _ResidentesListViewState extends State<ResidentesListView>
 
   Widget _buildList(List<Residente> residentes, ResidenteController ctrl) {
     if (residentes.isEmpty) {
-      return const Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.people_outline, size: 64, color: AppTheme.textSecondary),
-            SizedBox(height: 12),
-            Text('No hay residentes',
-                style: TextStyle(color: AppTheme.textSecondary)),
-          ],
+      return RefreshIndicator(
+        onRefresh: ctrl.fetchResidentes,
+        child: LayoutBuilder(
+          builder: (context, constraints) => SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minHeight: constraints.maxHeight),
+              child: const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.people_outline, size: 64, color: AppTheme.textSecondary),
+                    SizedBox(height: 12),
+                    Text('No hay residentes',
+                        style: TextStyle(color: AppTheme.textSecondary)),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ),
       );
     }
@@ -131,9 +146,13 @@ class _ResidentesListViewState extends State<ResidentesListView>
         separatorBuilder: (_, __) => const SizedBox(height: 8),
         itemBuilder: (_, i) => _ResidenteCard(
           residente: residentes[i],
-          onTap: () =>
-              context.push('/residentes/${residentes[i].id}'),
-          onToggle: () => ctrl.toggleEstado(residentes[i].id),
+          onTap: () async {
+            await context.push('/residentes/${residentes[i].idString}');
+            if (mounted) {
+              context.read<ResidenteController>().fetchResidentes();
+            }
+          },
+          onToggle: () => ctrl.toggleEstado(residentes[i].idString),
         ),
       ),
     );
@@ -176,12 +195,12 @@ class _ResidenteCard extends StatelessWidget {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         leading: CircleAvatar(
           backgroundColor: AppTheme.primaryColor.withValues(alpha: 0.15),
-          backgroundImage: residente.avatarUrl != null
-              ? NetworkImage(residente.avatarUrl!)
+          backgroundImage: (residente.fotoPerfil != null && residente.fotoPerfil!.isNotEmpty)
+              ? NetworkImage(residente.fotoPerfil!)
               : null,
-          child: residente.avatarUrl == null
+          child: (residente.fotoPerfil == null || residente.fotoPerfil!.isEmpty)
               ? Text(
-                  '${residente.nombre[0]}${residente.apellido[0]}',
+                  '${residente.nombres.isNotEmpty ? residente.nombres[0] : ''}${residente.apellidos.isNotEmpty ? residente.apellidos[0] : ''}',
                   style: const TextStyle(
                       color: AppTheme.primaryColor,
                       fontWeight: FontWeight.w700),
@@ -195,21 +214,21 @@ class _ResidenteCard extends StatelessWidget {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (residente.unidadNumero != null)
+            if (residente.numeroIdentificacion.isNotEmpty)
               Row(
                 children: [
-                  const Icon(Icons.home_outlined,
+                  const Icon(Icons.badge_outlined,
                       size: 12, color: AppTheme.textSecondary),
                   const SizedBox(width: 4),
                   Text(
-                    'Unidad ${residente.unidadNumero}',
+                    residente.numeroIdentificacion,
                     style: const TextStyle(
                         fontSize: 12, color: AppTheme.textSecondary),
                   ),
                 ],
               ),
             Text(
-              residente.email,
+              residente.correo,
               style: const TextStyle(
                   fontSize: 11, color: AppTheme.textSecondary),
             ),
@@ -228,7 +247,7 @@ class _ResidenteCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
-                residente.activo ? 'Activo' : 'Inactivo',
+                residente.estado,
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,

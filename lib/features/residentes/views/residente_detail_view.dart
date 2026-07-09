@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/app_text_field.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../controllers/residente_controller.dart';
 
@@ -37,8 +36,12 @@ class _ResidenteDetailViewState extends State<ResidenteDetailView> {
           if (residente != null)
             IconButton(
               icon: const Icon(Icons.edit_outlined),
-              onPressed: () =>
-                  context.push('/residentes/${residente.id}/editar'),
+              onPressed: () async {
+                await context.push('/residentes/${residente.idString}/editar');
+                if (mounted) {
+                  context.read<ResidenteController>().fetchResidenteById(widget.residenteId);
+                }
+              },
             ),
         ],
       ),
@@ -58,13 +61,20 @@ class _ResidenteDetailViewState extends State<ResidenteDetailView> {
                             CircleAvatar(
                               radius: 40,
                               backgroundColor: AppTheme.primaryColor,
-                              child: Text(
-                                '${residente.nombre[0]}${residente.apellido[0]}',
-                                style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w700),
-                              ),
+                              backgroundImage: (residente.fotoPerfil != null &&
+                                      residente.fotoPerfil!.isNotEmpty)
+                                  ? NetworkImage(residente.fotoPerfil!)
+                                  : null,
+                              child: (residente.fotoPerfil == null ||
+                                      residente.fotoPerfil!.isEmpty)
+                                  ? Text(
+                                      '${residente.nombres.isNotEmpty ? residente.nombres[0] : ''}${residente.apellidos.isNotEmpty ? residente.apellidos[0] : ''}',
+                                      style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 24,
+                                          fontWeight: FontWeight.w700),
+                                    )
+                                  : null,
                             ),
                             const SizedBox(height: 12),
                             Text(residente.nombreCompleto,
@@ -81,7 +91,7 @@ class _ResidenteDetailViewState extends State<ResidenteDetailView> {
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
-                                residente.activo ? 'Activo' : 'Inactivo',
+                                residente.estado,
                                 style: TextStyle(
                                     color: residente.activo
                                         ? AppTheme.successColor
@@ -95,27 +105,35 @@ class _ResidenteDetailViewState extends State<ResidenteDetailView> {
                       ),
                       const SizedBox(height: 24),
 
-                      // Información
-                      _InfoCard(title: 'Información de contacto', items: [
+                      // Información de identificación
+                      _InfoCard(title: 'Identificación', items: [
                         _InfoItem(
-                            icon: Icons.email_outlined, value: residente.email),
-                        _InfoItem(
-                            icon: Icons.phone_outlined,
-                            value: residente.telefono),
-                        if (residente.cedula != null)
-                          _InfoItem(
-                              icon: Icons.badge_outlined,
-                              value: 'CI: ${residente.cedula}'),
+                            icon: Icons.badge_outlined,
+                            value: '${residente.tipoIdentificacion}: ${residente.numeroIdentificacion}'),
                       ]),
                       const SizedBox(height: 12),
 
-                      if (residente.unidadNumero != null)
-                        _InfoCard(title: 'Unidad asignada', items: [
+                      // Información de contacto
+                      _InfoCard(title: 'Información de contacto', items: [
+                        _InfoItem(
+                            icon: Icons.email_outlined, value: residente.correo),
+                        _InfoItem(
+                            icon: Icons.phone_outlined,
+                            value: residente.telefono),
+                      ]),
+                      const SizedBox(height: 12),
+
+                      // Datos personales
+                      _InfoCard(title: 'Datos personales', items: [
+                        if (residente.fechaNacimiento.isNotEmpty)
                           _InfoItem(
-                              icon: Icons.home_outlined,
-                              value:
-                                  'Unidad ${residente.unidadNumero}'),
-                        ]),
+                              icon: Icons.calendar_today_outlined,
+                              value: 'Nacimiento: ${residente.fechaNacimiento}'),
+                        if (residente.direccion.isNotEmpty)
+                          _InfoItem(
+                              icon: Icons.location_on_outlined,
+                              value: residente.direccion),
+                      ]),
                       const SizedBox(height: 24),
 
                       // Acciones
@@ -129,7 +147,7 @@ class _ResidenteDetailViewState extends State<ResidenteDetailView> {
                             icon: Icons.account_balance_wallet_outlined,
                             isFullWidth: true,
                             onPressed: () => context.push(
-                                '/cuotas/estado/${residente.id}'),
+                                '/cuotas/estado/${residente.idString}'),
                           ),
                           const SizedBox(height: 12),
                           AppButton(
@@ -137,8 +155,12 @@ class _ResidenteDetailViewState extends State<ResidenteDetailView> {
                             label: 'Editar residente',
                             icon: Icons.edit_rounded,
                             isFullWidth: true,
-                            onPressed: () => context
-                                .push('/residentes/${residente.id}/editar'),
+                            onPressed: () async {
+                              await context.push('/residentes/${residente.idString}/editar');
+                              if (mounted) {
+                                context.read<ResidenteController>().fetchResidenteById(widget.residenteId);
+                              }
+                            },
                           ),
                         ],
                       ),
@@ -173,9 +195,11 @@ class _InfoCard extends StatelessWidget {
                     children: [
                       Icon(i.icon, size: 18, color: AppTheme.textSecondary),
                       const SizedBox(width: 10),
-                      Text(i.value,
-                          style: const TextStyle(
-                              fontSize: 14, color: AppTheme.textPrimary)),
+                      Expanded(
+                        child: Text(i.value,
+                            style: const TextStyle(
+                                fontSize: 14, color: AppTheme.textPrimary)),
+                      ),
                     ],
                   ),
                 )),

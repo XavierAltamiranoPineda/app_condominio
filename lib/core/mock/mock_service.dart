@@ -21,42 +21,43 @@ class MockService {
   // RESIDENTES
   // ─────────────────────────────────────────────────────────────
   final List<Residente> _residentes = [
-    Residente(id: '1', nombre: 'Carlos', apellido: 'Mendoza', email: 'carlos@condo.com', telefono: '0991234567', unidadId: '1', unidadNumero: '101', activo: true, cedula: '1712345678', createdAt: DateTime(2024, 1, 15)),
+    Residente(id: 1, tipoIdentificacion: 'CEDULA', numeroIdentificacion: '1712345678', nombres: 'Carlos', apellidos: 'Mendoza', telefono: '0991234567', correo: 'carlos@condo.com', fechaNacimiento: '1990-01-15', direccion: 'Av. Principal 123', estado: 'ACTIVO'),
   ];
 
   List<Residente> getResidentes() => List.from(_residentes);
 
   Residente? getResidenteById(String id) =>
-      _residentes.cast<Residente?>().firstWhere((r) => r?.id == id, orElse: () => null);
+      _residentes.cast<Residente?>().firstWhere((r) => r?.idString == id, orElse: () => null);
 
   Residente createResidente(Map<String, dynamic> data) {
     final r = Residente(
-      id: _nextId(),
-      nombre: data['nombre'] ?? '',
-      apellido: data['apellido'] ?? '',
-      email: data['email'] ?? '',
+      id: int.parse(_nextId()),
+      tipoIdentificacion: data['tipoIdentificacion'] ?? 'CEDULA',
+      numeroIdentificacion: data['numeroIdentificacion'] ?? '',
+      nombres: data['nombres'] ?? '',
+      apellidos: data['apellidos'] ?? '',
       telefono: data['telefono'] ?? '',
-      unidadId: data['unidad_id'],
-      unidadNumero: null,
-      activo: true,
-      cedula: data['cedula'],
-      createdAt: DateTime.now(),
+      correo: data['correo'] ?? '',
+      fechaNacimiento: data['fechaNacimiento'] ?? '',
+      direccion: data['direccion'] ?? '',
+      fotoPerfil: data['fotoPerfil'],
+      estado: data['estado'] ?? 'ACTIVO',
     );
     _residentes.insert(0, r);
     return r;
   }
 
   Residente? updateResidente(String id, Map<String, dynamic> data) {
-    final idx = _residentes.indexWhere((r) => r.id == id);
+    final idx = _residentes.indexWhere((r) => r.idString == id);
     if (idx == -1) return null;
     final old = _residentes[idx];
     final updated = old.copyWith(
-      nombre: data['nombre'] ?? old.nombre,
-      apellido: data['apellido'] ?? old.apellido,
-      email: data['email'] ?? old.email,
+      nombres: data['nombres'] ?? old.nombres,
+      apellidos: data['apellidos'] ?? old.apellidos,
+      correo: data['correo'] ?? old.correo,
       telefono: data['telefono'] ?? old.telefono,
-      cedula: data['cedula'] ?? old.cedula,
-      activo: data['activo'] ?? old.activo,
+      numeroIdentificacion: data['numeroIdentificacion'] ?? old.numeroIdentificacion,
+      estado: data['estado'] ?? old.estado,
     );
     _residentes[idx] = updated;
     return updated;
@@ -64,7 +65,7 @@ class MockService {
 
   bool deleteResidente(String id) {
     final len = _residentes.length;
-    _residentes.removeWhere((r) => r.id == id);
+    _residentes.removeWhere((r) => r.idString == id);
     return _residentes.length < len;
   }
 

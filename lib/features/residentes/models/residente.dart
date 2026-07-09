@@ -1,95 +1,101 @@
 import 'package:equatable/equatable.dart';
 
-/// Modelo de Residente
+/// Modelo de Residente — alineado 100% con API_CONTRACT.md
+/// POST/PUT Request y GET Response comparten los mismos nombres de campo.
 class Residente extends Equatable {
-  final String id;
-  final String nombre;
-  final String apellido;
-  final String email;
+  final int? id;
+  final String tipoIdentificacion;
+  final String numeroIdentificacion;
+  final String nombres;
+  final String apellidos;
   final String telefono;
-  final String? unidadId;
-  final String? unidadNumero;
-  final bool activo;
-  final String? avatarUrl;
-  final String? cedula;
-  final DateTime? fechaIngreso;
-  final DateTime createdAt;
+  final String correo;
+  final String fechaNacimiento; // formato "1990-01-01"
+  final String direccion;
+  final String? fotoPerfil;
+  final String estado; // "ACTIVO" | "INACTIVO"
 
   const Residente({
-    required this.id,
-    required this.nombre,
-    required this.apellido,
-    required this.email,
+    this.id,
+    required this.tipoIdentificacion,
+    required this.numeroIdentificacion,
+    required this.nombres,
+    required this.apellidos,
     required this.telefono,
-    this.unidadId,
-    this.unidadNumero,
-    required this.activo,
-    this.avatarUrl,
-    this.cedula,
-    this.fechaIngreso,
-    required this.createdAt,
+    required this.correo,
+    required this.fechaNacimiento,
+    required this.direccion,
+    this.fotoPerfil,
+    required this.estado,
   });
 
-  String get nombreCompleto => '$nombre $apellido';
+  /// Nombre completo para mostrar en la UI
+  String get nombreCompleto => '$nombres $apellidos';
 
+  /// El ID como String para compatibilidad con rutas de GoRouter
+  String get idString => id?.toString() ?? '';
+
+  /// Si el residente está activo
+  bool get activo => estado == 'ACTIVO';
+
+  /// Deserialización desde la respuesta del API (campo `data` del envelope)
   factory Residente.fromJson(Map<String, dynamic> json) {
-    final persona = json['persona'] ?? {};
     return Residente(
-        id: json['id']?.toString() ?? '',
-        nombre: persona['nombres'] ?? json['nombre'] ?? '',
-        apellido: persona['apellidos'] ?? json['apellido'] ?? '',
-        email: persona['correo'] ?? json['email'] ?? '',
-        telefono: persona['telefono'] ?? json['telefono'] ?? '',
-        unidadId: json['idUnidad']?.toString() ?? json['unidad_id']?.toString(),
-        unidadNumero: json['unidad_numero'],
-        activo: json['activo'] ?? true,
-        avatarUrl: json['avatar_url'],
-        cedula: json['numeroIdentificacion'] ?? json['cedula'],
-        fechaIngreso: json['fechaIngreso'] != null
-            ? DateTime.tryParse(json['fechaIngreso'])
-            : null,
-        createdAt:
-            DateTime.tryParse(json['fechaIngreso'] ?? json['created_at'] ?? '') ?? DateTime.now(),
-      );
+      id: json['id'] is int ? json['id'] : int.tryParse(json['id']?.toString() ?? ''),
+      tipoIdentificacion: json['tipoIdentificacion'] ?? 'CEDULA',
+      numeroIdentificacion: json['numeroIdentificacion'] ?? '',
+      nombres: json['nombres'] ?? '',
+      apellidos: json['apellidos'] ?? '',
+      telefono: json['telefono'] ?? '',
+      correo: json['correo'] ?? '',
+      fechaNacimiento: json['fechaNacimiento'] ?? '',
+      direccion: json['direccion'] ?? '',
+      fotoPerfil: json['fotoPerfil'],
+      estado: json['estado'] ?? 'ACTIVO',
+    );
   }
 
+  /// Serialización para enviar al API (POST / PUT)
   Map<String, dynamic> toJson() => {
-        'tipoIdentificacion': 'CEDULA',
-        'numeroIdentificacion': cedula ?? '',
-        'nombres': nombre,
-        'apellidos': apellido,
+        'tipoIdentificacion': tipoIdentificacion,
+        'numeroIdentificacion': numeroIdentificacion,
+        'nombres': nombres,
+        'apellidos': apellidos,
         'telefono': telefono,
-        'correo': email,
-        'fechaNacimiento': '1990-01-01',
-        'direccion': 'N/A',
-        'fotoPerfil': avatarUrl ?? 'https://link.com/perfil.jpg',
-        'estado': activo ? 'ACTIVO' : 'INACTIVO',
+        'correo': correo,
+        'fechaNacimiento': fechaNacimiento,
+        'direccion': direccion,
+        'fotoPerfil': fotoPerfil ?? '',
+        'estado': estado,
       };
 
   Residente copyWith({
-    String? nombre,
-    String? apellido,
-    String? email,
+    int? id,
+    String? tipoIdentificacion,
+    String? numeroIdentificacion,
+    String? nombres,
+    String? apellidos,
     String? telefono,
-    String? unidadId,
-    bool? activo,
-    String? cedula,
+    String? correo,
+    String? fechaNacimiento,
+    String? direccion,
+    String? fotoPerfil,
+    String? estado,
   }) =>
       Residente(
-        id: id,
-        nombre: nombre ?? this.nombre,
-        apellido: apellido ?? this.apellido,
-        email: email ?? this.email,
+        id: id ?? this.id,
+        tipoIdentificacion: tipoIdentificacion ?? this.tipoIdentificacion,
+        numeroIdentificacion: numeroIdentificacion ?? this.numeroIdentificacion,
+        nombres: nombres ?? this.nombres,
+        apellidos: apellidos ?? this.apellidos,
         telefono: telefono ?? this.telefono,
-        unidadId: unidadId ?? this.unidadId,
-        unidadNumero: unidadNumero,
-        activo: activo ?? this.activo,
-        avatarUrl: avatarUrl,
-        cedula: cedula ?? this.cedula,
-        fechaIngreso: fechaIngreso,
-        createdAt: createdAt,
+        correo: correo ?? this.correo,
+        fechaNacimiento: fechaNacimiento ?? this.fechaNacimiento,
+        direccion: direccion ?? this.direccion,
+        fotoPerfil: fotoPerfil ?? this.fotoPerfil,
+        estado: estado ?? this.estado,
       );
 
   @override
-  List<Object?> get props => [id, email, activo];
+  List<Object?> get props => [id, correo, estado];
 }

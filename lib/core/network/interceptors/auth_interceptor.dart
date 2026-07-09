@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:hive/hive.dart';
 
@@ -19,14 +20,51 @@ class AuthInterceptor extends Interceptor {
     RequestInterceptorHandler handler,
   ) async {
     // No adjuntar token en rutas públicas
-    final isPublicRoute = options.path.contains('/auth/login') ||
-        options.path.contains('/auth/refresh') ||
-        options.path.contains('/auth/forgot-password');
+    final isPublicRoute = options.path.contains('auth/login') ||
+        options.path.contains('auth/refresh') ||
+        options.path.contains('auth/forgot-password');
 
     if (!isPublicRoute) {
       final token = cacheBox.get(StorageKeys.accessToken);
+      print('=== AUTH INTERCEPTOR ===');
+      print('Path: ${options.path}');
+      print('Token exists: ${token != null}');
+      
       if (token != null) {
         options.headers['Authorization'] = 'Bearer $token';
+        
+        // Decodificar JWT para verificar expiración
+        try {
+          final parts = token.toString().split('.');
+          if (parts.length >= 2) {
+            String payload = parts[1];
+            // Agregar padding base64
+            while (payload.length % 4 != 0) payload += '=';
+            final decoded = utf8.decode(base64Decode(payload));
+            final payloadMap = jsonDecode(decoded) as Map<String, dynamic>;
+            
+            // Verificar expiración
+            if (payloadMap['exp'] != null) {
+              final expDate = DateTime.fromMillisecondsSinceEpoch(
+                (payloadMap['exp'] as int) * 1000,
+              );
+              final now = DateTime.now().toUtc();
+              print('JWT exp: $expDate');
+              print('Now (UTC): $now');
+              print('¿TOKEN EXPIRADO? ${now.isAfter(expDate)}');
+            }
+            
+            // Verificar subject
+            print('JWT sub: ${payloadMap['sub']}');
+            
+            // Verificar qué claim tiene los roles
+            print('JWT claims disponibles: ${payloadMap.keys.toList()}');
+          }
+        } catch (e) {
+          print('Error decodificando JWT: $e');
+        }
+      } else {
+        print('⚠️ NO HAY TOKEN EN HIVE — el request irá sin Authorization');
       }
     }
 

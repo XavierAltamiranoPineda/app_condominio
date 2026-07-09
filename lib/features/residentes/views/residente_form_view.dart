@@ -8,6 +8,9 @@ import '../controllers/residente_controller.dart';
 import '../models/residente.dart';
 
 /// Formulario de Crear / Editar Residente
+/// Campos alineados 100% con API_CONTRACT.md:
+///   tipoIdentificacion, numeroIdentificacion, nombres, apellidos,
+///   telefono, correo, fechaNacimiento, direccion, fotoPerfil, estado
 class ResidenteFormView extends StatefulWidget {
   final String? residenteId;
   const ResidenteFormView({super.key, this.residenteId});
@@ -20,11 +23,23 @@ class ResidenteFormView extends StatefulWidget {
 
 class _ResidenteFormViewState extends State<ResidenteFormView> {
   final _formKey = GlobalKey<FormState>();
-  final _nombreCtrl = TextEditingController();
-  final _apellidoCtrl = TextEditingController();
-  final _emailCtrl = TextEditingController();
-  final _telCtrl = TextEditingController();
-  final _cedulaCtrl = TextEditingController();
+
+  // Controladores para cada campo del contrato
+  final _nombresCtrl = TextEditingController();
+  final _apellidosCtrl = TextEditingController();
+  final _numeroIdentificacionCtrl = TextEditingController();
+  final _correoCtrl = TextEditingController();
+  final _telefonoCtrl = TextEditingController();
+  final _fechaNacimientoCtrl = TextEditingController();
+  final _direccionCtrl = TextEditingController();
+  final _fotoPerfilCtrl = TextEditingController();
+
+  // Campos con valor por defecto
+  String _tipoIdentificacion = 'CEDULA';
+  String _estado = 'ACTIVO';
+
+  static const _tiposIdentificacion = ['CEDULA', 'PASAPORTE', 'RUC'];
+  static const _estados = ['ACTIVO', 'INACTIVO'];
 
   @override
   void initState() {
@@ -35,11 +50,18 @@ class _ResidenteFormViewState extends State<ResidenteFormView> {
         ctrl.fetchResidenteById(widget.residenteId!).then((_) {
           final r = ctrl.selectedResidente;
           if (r != null && mounted) {
-            _nombreCtrl.text = r.nombre;
-            _apellidoCtrl.text = r.apellido;
-            _emailCtrl.text = r.email;
-            _telCtrl.text = r.telefono;
-            _cedulaCtrl.text = r.cedula ?? '';
+            setState(() {
+              _nombresCtrl.text = r.nombres;
+              _apellidosCtrl.text = r.apellidos;
+              _numeroIdentificacionCtrl.text = r.numeroIdentificacion;
+              _correoCtrl.text = r.correo;
+              _telefonoCtrl.text = r.telefono;
+              _fechaNacimientoCtrl.text = r.fechaNacimiento;
+              _direccionCtrl.text = r.direccion;
+              _fotoPerfilCtrl.text = r.fotoPerfil ?? '';
+              _tipoIdentificacion = r.tipoIdentificacion;
+              _estado = r.estado;
+            });
           }
         });
       });
@@ -48,12 +70,33 @@ class _ResidenteFormViewState extends State<ResidenteFormView> {
 
   @override
   void dispose() {
-    _nombreCtrl.dispose();
-    _apellidoCtrl.dispose();
-    _emailCtrl.dispose();
-    _telCtrl.dispose();
-    _cedulaCtrl.dispose();
+    _nombresCtrl.dispose();
+    _apellidosCtrl.dispose();
+    _numeroIdentificacionCtrl.dispose();
+    _correoCtrl.dispose();
+    _telefonoCtrl.dispose();
+    _fechaNacimientoCtrl.dispose();
+    _direccionCtrl.dispose();
+    _fotoPerfilCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _selectFechaNacimiento() async {
+    final now = DateTime.now();
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime(1990, 1, 1),
+      firstDate: DateTime(1920),
+      lastDate: now,
+      helpText: 'Seleccionar fecha de nacimiento',
+    );
+    if (picked != null) {
+      setState(() {
+        // Formato ISO-8601 simple: YYYY-MM-DD
+        _fechaNacimientoCtrl.text =
+            '${picked.year}-${picked.month.toString().padLeft(2, '0')}-${picked.day.toString().padLeft(2, '0')}';
+      });
+    }
   }
 
   Future<void> _handleSubmit() async {
@@ -61,14 +104,18 @@ class _ResidenteFormViewState extends State<ResidenteFormView> {
 
     final ctrl = context.read<ResidenteController>();
     final residente = Residente(
-      id: widget.residenteId ?? '',
-      nombre: _nombreCtrl.text.trim(),
-      apellido: _apellidoCtrl.text.trim(),
-      email: _emailCtrl.text.trim(),
-      telefono: _telCtrl.text.trim(),
-      cedula: _cedulaCtrl.text.trim(),
-      activo: true,
-      createdAt: DateTime.now(),
+      tipoIdentificacion: _tipoIdentificacion,
+      numeroIdentificacion: _numeroIdentificacionCtrl.text.trim(),
+      nombres: _nombresCtrl.text.trim(),
+      apellidos: _apellidosCtrl.text.trim(),
+      telefono: _telefonoCtrl.text.trim(),
+      correo: _correoCtrl.text.trim(),
+      fechaNacimiento: _fechaNacimientoCtrl.text.trim(),
+      direccion: _direccionCtrl.text.trim(),
+      fotoPerfil: _fotoPerfilCtrl.text.trim().isNotEmpty
+          ? _fotoPerfilCtrl.text.trim()
+          : null,
+      estado: _estado,
     );
     final data = residente.toJson();
 
@@ -90,6 +137,18 @@ class _ResidenteFormViewState extends State<ResidenteFormView> {
         ),
       );
       context.pop();
+    } else if (!ok && mounted) {
+      // Mostrar error del controlador si la operación falló
+      final errorMsg = ctrl.errorMessage;
+      if (errorMsg != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMsg),
+            backgroundColor: const Color(0xFFC62828),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 
@@ -115,31 +174,64 @@ class _ResidenteFormViewState extends State<ResidenteFormView> {
                   children: [
                     CircleAvatar(
                       radius: 40,
-                      backgroundColor: const Color(0xFF1A237E).withValues(alpha: 0.1),
+                      backgroundColor:
+                          const Color(0xFF1A237E).withValues(alpha: 0.1),
                       child: const Icon(Icons.person_rounded,
                           size: 40, color: Color(0xFF1A237E)),
                     ),
                     const SizedBox(height: 8),
-                    TextButton.icon(
-                      icon: const Icon(Icons.photo_camera_outlined, size: 16),
-                      label: const Text('Cambiar foto'),
-                      onPressed: () {},
-                    ),
                   ],
                 ),
               ),
               const SizedBox(height: 20),
 
-              // Información personal
+              // ─── Sección: Identificación ────────────────────────────
+              Text('Identificación',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: const Color(0xFF1A237E))),
+              const SizedBox(height: 12),
+
+              // Tipo de identificación (Dropdown)
+              DropdownButtonFormField<String>(
+                key: const Key('residente_tipo_identificacion'),
+                value: _tipoIdentificacion,
+                decoration: const InputDecoration(
+                  labelText: 'Tipo de identificación',
+                  prefixIcon: Icon(Icons.badge_outlined, size: 20),
+                ),
+                items: _tiposIdentificacion
+                    .map((t) => DropdownMenuItem(value: t, child: Text(t)))
+                    .toList(),
+                onChanged: (v) {
+                  if (v != null) setState(() => _tipoIdentificacion = v);
+                },
+                validator: (v) =>
+                    (v?.isEmpty ?? true) ? 'Seleccione un tipo' : null,
+              ),
+              const SizedBox(height: 12),
+
+              // Número de identificación
+              AppTextField(
+                id: 'residente_numero_identificacion',
+                controller: _numeroIdentificacionCtrl,
+                label: 'Número de identificación',
+                prefixIcon: Icons.numbers_outlined,
+                keyboardType: TextInputType.number,
+                validator: (v) => (v?.isEmpty ?? true) ? 'Requerido' : null,
+                textInputAction: TextInputAction.next,
+              ),
+              const SizedBox(height: 20),
+
+              // ─── Sección: Información Personal ─────────────────────
               Text('Información personal',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: const Color(0xFF1A237E))),
               const SizedBox(height: 12),
 
               AppTextField(
-                id: 'residente_nombre',
-                controller: _nombreCtrl,
-                label: 'Nombre',
+                id: 'residente_nombres',
+                controller: _nombresCtrl,
+                label: 'Nombres',
                 prefixIcon: Icons.person_outlined,
                 validator: (v) => (v?.isEmpty ?? true) ? 'Requerido' : null,
                 textInputAction: TextInputAction.next,
@@ -147,34 +239,36 @@ class _ResidenteFormViewState extends State<ResidenteFormView> {
               const SizedBox(height: 12),
 
               AppTextField(
-                id: 'residente_apellido',
-                controller: _apellidoCtrl,
-                label: 'Apellido',
+                id: 'residente_apellidos',
+                controller: _apellidosCtrl,
+                label: 'Apellidos',
                 prefixIcon: Icons.person_outlined,
                 validator: (v) => (v?.isEmpty ?? true) ? 'Requerido' : null,
                 textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 12),
 
+              // Fecha de nacimiento (DatePicker)
               AppTextField(
-                id: 'residente_cedula',
-                controller: _cedulaCtrl,
-                label: 'Cédula / Identificación',
-                prefixIcon: Icons.badge_outlined,
-                keyboardType: TextInputType.number,
-                textInputAction: TextInputAction.next,
+                id: 'residente_fecha_nacimiento',
+                controller: _fechaNacimientoCtrl,
+                label: 'Fecha de nacimiento',
+                prefixIcon: Icons.calendar_today_outlined,
+                readOnly: true,
+                onTap: _selectFechaNacimiento,
+                validator: (v) => (v?.isEmpty ?? true) ? 'Requerido' : null,
               ),
               const SizedBox(height: 20),
 
-              // Contacto
+              // ─── Sección: Contacto ──────────────────────────────────
               Text('Contacto',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       color: const Color(0xFF1A237E))),
               const SizedBox(height: 12),
 
               AppTextField(
-                id: 'residente_email',
-                controller: _emailCtrl,
+                id: 'residente_correo',
+                controller: _correoCtrl,
                 label: 'Correo electrónico',
                 prefixIcon: Icons.email_outlined,
                 keyboardType: TextInputType.emailAddress,
@@ -191,20 +285,86 @@ class _ResidenteFormViewState extends State<ResidenteFormView> {
 
               AppTextField(
                 id: 'residente_telefono',
-                controller: _telCtrl,
+                controller: _telefonoCtrl,
                 label: 'Teléfono',
                 prefixIcon: Icons.phone_outlined,
                 keyboardType: TextInputType.phone,
-                textInputAction: TextInputAction.done,
+                validator: (v) => (v?.isEmpty ?? true) ? 'Requerido' : null,
+                textInputAction: TextInputAction.next,
+              ),
+              const SizedBox(height: 20),
+
+              // ─── Sección: Ubicación ─────────────────────────────────
+              Text('Ubicación',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: const Color(0xFF1A237E))),
+              const SizedBox(height: 12),
+
+              AppTextField(
+                id: 'residente_direccion',
+                controller: _direccionCtrl,
+                label: 'Dirección',
+                prefixIcon: Icons.location_on_outlined,
+                validator: (v) => (v?.isEmpty ?? true) ? 'Requerido' : null,
+                textInputAction: TextInputAction.next,
+              ),
+              const SizedBox(height: 20),
+
+              // ─── Sección: Foto y Estado ─────────────────────────────
+              Text('Otros datos',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: const Color(0xFF1A237E))),
+              const SizedBox(height: 12),
+
+              AppTextField(
+                id: 'residente_foto_perfil',
+                controller: _fotoPerfilCtrl,
+                label: 'URL foto de perfil (opcional)',
+                prefixIcon: Icons.photo_camera_outlined,
+                keyboardType: TextInputType.url,
+                textInputAction: TextInputAction.next,
+              ),
+              const SizedBox(height: 12),
+
+              // Estado (Dropdown)
+              DropdownButtonFormField<String>(
+                key: const Key('residente_estado'),
+                value: _estado,
+                decoration: const InputDecoration(
+                  labelText: 'Estado',
+                  prefixIcon: Icon(Icons.toggle_on_outlined, size: 20),
+                ),
+                items: _estados
+                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                    .toList(),
+                onChanged: (v) {
+                  if (v != null) setState(() => _estado = v);
+                },
               ),
               const SizedBox(height: 12),
 
               // Error
               if (ctrl.errorMessage != null) ...[
                 const SizedBox(height: 8),
-                Text(ctrl.errorMessage!,
-                    style: const TextStyle(
-                        color: Color(0xFFC62828), fontSize: 13)),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFC62828).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.error_outline,
+                          color: Color(0xFFC62828), size: 20),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(ctrl.errorMessage!,
+                            style: const TextStyle(
+                                color: Color(0xFFC62828), fontSize: 13)),
+                      ),
+                    ],
+                  ),
+                ),
               ],
 
               const SizedBox(height: 28),
