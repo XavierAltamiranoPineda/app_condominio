@@ -37,15 +37,14 @@ class _AvisoFormViewState extends State<AvisoFormView> {
     final ctrl = context.read<AvisoController>();
     
     final aviso = Aviso(
-      id: '',
+      id: 0,
       titulo: _tituloCtrl.text.trim(),
-      contenido: _contenidoCtrl.text.trim(),
-      tipo: _tipo,
-      activo: true,
-      publicadoPorNombre: '',
-      createdAt: DateTime.now(),
+      mensaje: _contenidoCtrl.text.trim(),
+      destinatarioTipo: 'TODOS',
+      fecha: DateTime.now(),
+      autorId: 1,
     );
-    final ok = await ctrl.createAviso(aviso.toJson());
+    final ok = await ctrl.createAviso(aviso.toJsonCreate());
     if (ok && mounted) {
       // Disparar notificación global (simulada en el controller compartido)
       context.read<NotificacionController>().addNotificacion(

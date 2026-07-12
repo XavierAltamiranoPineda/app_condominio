@@ -91,7 +91,7 @@ class _VisitasListViewState extends State<VisitasListView>
           visita: visitas[i],
           showSalida: showSalida,
           onRegistrarSalida: () =>
-              ctrl.registrarSalida(visitas[i].id),
+              ctrl.registrarSalida(visitas[i].id.toString()),
         ),
       ),
     );

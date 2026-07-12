@@ -132,7 +132,7 @@ class _IncidenciasListViewState extends State<IncidenciasListView>
             context.push('/incidencias/${items[i].id}');
           },
           onCambiarEstado: (estado) =>
-              ctrl.cambiarEstado(items[i].id, estado),
+              ctrl.cambiarEstado(items[i].id.toString(), estado),
         ),
       ),
     );

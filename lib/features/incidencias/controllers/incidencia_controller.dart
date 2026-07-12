@@ -72,11 +72,20 @@ class IncidenciaController extends ChangeNotifier {
 
   Future<bool> cambiarEstado(String id, EstadoIncidencia nuevoEstado) async {
     try {
-      final updated = await _repository.cambiarEstado(id, nuevoEstado.value);
-      final idx = _incidencias.indexWhere((i) => i.id == id);
+      final intId = int.tryParse(id) ?? 0;
+      final existing = _incidencias.firstWhere((i) => i.id == intId);
+      final updateData = existing.toJsonUpdate();
+      
+      // Update state field based on the enum
+      if (nuevoEstado == EstadoIncidencia.abierta) updateData['estadoActualId'] = 1;
+      else if (nuevoEstado == EstadoIncidencia.enProceso) updateData['estadoActualId'] = 2;
+      else if (nuevoEstado == EstadoIncidencia.cerrada) updateData['estadoActualId'] = 3;
+
+      final updated = await _repository.updateIncidencia(id, updateData);
+      final idx = _incidencias.indexWhere((i) => i.id == intId);
       if (idx != -1) {
         _incidencias[idx] = updated;
-        if (_selected?.id == id) _selected = updated;
+        if (_selected?.id == intId) _selected = updated;
         notifyListeners();
       }
       return true;

@@ -40,16 +40,12 @@ class _VisitaFormViewState extends State<VisitaFormView> {
     final ctrl = context.read<VisitaController>();
 
     final visita = Visita(
-      id: '',
-      nombreVisitante: _nombreCtrl.text.trim(),
-      documentoIdentidad: _documentoCtrl.text.trim(),
-      telefono: _telefonoCtrl.text.trim(),
-      unidadDestino: _unidadCtrl.text.trim(),
-      residenteNombre: '',
-      proposito: _propositoCtrl.text.trim(),
-      vehiculoPlaca: _placaCtrl.text.trim(),
+      id: 0,
+      visitanteId: 1,
+      unidadId: int.tryParse(_unidadCtrl.text.trim()) ?? 1,
+      guardiaId: 1,
+      estadoId: 1,
       horaIngreso: DateTime.now(),
-      registradoPorId: '',
     );
 
     final ok = await ctrl.registrarIngreso(visita.toJson());

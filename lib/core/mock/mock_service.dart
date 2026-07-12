@@ -277,48 +277,47 @@ class MockService {
   // RESERVAS
   // ─────────────────────────────────────────────────────────────
   final List<AreaComun> _areasComunes = [
-    AreaComun(id: '1', nombre: 'Salón de eventos', descripcion: 'Amplio salón con capacidad para 80 personas', capacidad: 80, disponible: true),
-    AreaComun(id: '2', nombre: 'Piscina', descripcion: 'Piscina semi-olímpica con zona de descanso', capacidad: 30, disponible: true),
-    AreaComun(id: '3', nombre: 'Cancha de tenis', descripcion: 'Cancha profesional con iluminación', capacidad: 4, disponible: true),
-    AreaComun(id: '4', nombre: 'Barbecue / Parrillero', descripcion: 'Zona de barbecue con 3 parrillas', capacidad: 20, disponible: true),
-    AreaComun(id: '5', nombre: 'Sala de reuniones', descripcion: 'Sala equipada con proyector y A/C', capacidad: 15, disponible: false),
+    AreaComun(id: 1, condominioId: 1, nombre: 'Salón de eventos', descripcion: 'Amplio salón con capacidad para 80 personas', capacidad: 80),
+    AreaComun(id: 2, condominioId: 1, nombre: 'Piscina', descripcion: 'Piscina semi-olímpica con zona de descanso', capacidad: 30),
+    AreaComun(id: 3, condominioId: 1, nombre: 'Cancha de tenis', descripcion: 'Cancha profesional con iluminación', capacidad: 4),
+    AreaComun(id: 4, condominioId: 1, nombre: 'Barbecue / Parrillero', descripcion: 'Zona de barbecue con 3 parrillas', capacidad: 20),
+    AreaComun(id: 5, condominioId: 1, nombre: 'Sala de reuniones', descripcion: 'Sala equipada con proyector y A/C', capacidad: 15),
   ];
 
   final List<Reserva> _reservas = [
-    Reserva(id: '1', areaComunId: '1', areaComunNombre: 'Salón de eventos', residenteId: '1', residenteNombre: 'Carlos Mendoza', estado: 'aprobada', fechaInicio: DateTime.now().add(const Duration(days: 3)), fechaFin: DateTime.now().add(const Duration(days: 3, hours: 4)), observaciones: 'Cumpleaños familiar', createdAt: DateTime.now().subtract(const Duration(days: 1))),
+    Reserva(id: 1, areaId: 1, personaId: 1, estadoId: 2, fecha: DateTime.now().add(const Duration(days: 3)), horaInicio: '10:00:00', horaFin: '14:00:00', observaciones: 'Cumpleaños familiar'),
   ];
 
   List<AreaComun> getAreasComunes() => List.from(_areasComunes);
   List<Reserva> getReservas() => List.from(_reservas);
 
   Reserva createReserva(Map<String, dynamic> data) {
-    final areaId = data['area_comun_id']?.toString() ?? '1';
+    final areaId = int.tryParse(data['area_comun_id']?.toString() ?? '1') ?? 1;
     final area = _areasComunes.firstWhere((a) => a.id == areaId, orElse: () => _areasComunes.first);
     final r = Reserva(
-      id: _nextId(),
-      areaComunId: areaId,
-      areaComunNombre: area.nombre,
-      residenteId: '1',
-      residenteNombre: 'Residente',
-      estado: 'pendiente',
-      fechaInicio: DateTime.tryParse(data['fecha_inicio'] ?? '') ?? DateTime.now(),
-      fechaFin: DateTime.tryParse(data['fecha_fin'] ?? '') ?? DateTime.now().add(const Duration(hours: 2)),
+      id: int.tryParse(_nextId()) ?? 0,
+      areaId: areaId,
+      personaId: 1,
+      estadoId: 1,
+      fecha: DateTime.tryParse(data['fecha_inicio'] ?? '') ?? DateTime.now(),
+      horaInicio: '10:00:00',
+      horaFin: '12:00:00',
       observaciones: data['observaciones'],
-      createdAt: DateTime.now(),
     );
     _reservas.insert(0, r);
     return r;
   }
 
   Reserva? cambiarEstadoReserva(String id, String nuevoEstado) {
-    final idx = _reservas.indexWhere((r) => r.id == id);
+    final intId = int.tryParse(id) ?? 0;
+    final idx = _reservas.indexWhere((r) => r.id == intId);
     if (idx == -1) return null;
     final old = _reservas[idx];
     final updated = Reserva(
-      id: old.id, areaComunId: old.areaComunId, areaComunNombre: old.areaComunNombre,
-      residenteId: old.residenteId, residenteNombre: old.residenteNombre,
-      estado: nuevoEstado, fechaInicio: old.fechaInicio, fechaFin: old.fechaFin,
-      observaciones: old.observaciones, createdAt: old.createdAt,
+      id: old.id, areaId: old.areaId, personaId: old.personaId,
+      estadoId: nuevoEstado == 'aprobada' ? 2 : (nuevoEstado == 'rechazada' ? 3 : 1),
+      fecha: old.fecha, horaInicio: old.horaInicio, horaFin: old.horaFin,
+      observaciones: old.observaciones,
     );
     _reservas[idx] = updated;
     return updated;
@@ -328,41 +327,33 @@ class MockService {
   // VISITAS
   // ─────────────────────────────────────────────────────────────
   final List<Visita> _visitas = [
-    Visita(id: '1', nombreVisitante: 'Roberto Silva', documentoIdentidad: '1798765432', telefono: '0987654321', unidadDestino: '101', residenteNombre: 'Carlos Mendoza', proposito: 'Visita familiar', vehiculoPlaca: null, horaIngreso: DateTime.now().subtract(const Duration(hours: 2)), horaSalida: null, qrCode: 'QR001', registradoPorId: 'guardia1'),
+    Visita(id: 1, visitanteId: 1, unidadId: 1, guardiaId: 1, estadoId: 2, horaIngreso: DateTime.now().subtract(const Duration(hours: 2))),
   ];
 
   List<Visita> getVisitas() => List.from(_visitas);
 
   Visita registrarIngreso(Map<String, dynamic> data) {
     final v = Visita(
-      id: _nextId(),
-      nombreVisitante: data['nombre_visitante'] ?? '',
-      documentoIdentidad: data['documento_identidad'] ?? '',
-      telefono: data['telefono'],
-      unidadDestino: data['unidad_destino'] ?? '',
-      residenteNombre: data['residente_nombre'] ?? '',
-      proposito: data['proposito'],
-      vehiculoPlaca: data['vehiculo_placa'],
+      id: int.tryParse(_nextId()) ?? 0,
+      visitanteId: 1,
+      unidadId: 1,
+      guardiaId: 1,
+      estadoId: 1,
       horaIngreso: DateTime.now(),
-      horaSalida: null,
-      qrCode: 'QR${_rng.nextInt(9000) + 1000}',
-      registradoPorId: 'guardia1',
     );
     _visitas.insert(0, v);
     return v;
   }
 
   Visita? registrarSalida(String id) {
-    final idx = _visitas.indexWhere((v) => v.id == id);
+    final intId = int.tryParse(id) ?? 0;
+    final idx = _visitas.indexWhere((v) => v.id == intId);
     if (idx == -1) return null;
     final old = _visitas[idx];
     final updated = Visita(
-      id: old.id, nombreVisitante: old.nombreVisitante,
-      documentoIdentidad: old.documentoIdentidad, telefono: old.telefono,
-      unidadDestino: old.unidadDestino, residenteNombre: old.residenteNombre,
-      proposito: old.proposito, vehiculoPlaca: old.vehiculoPlaca,
-      horaIngreso: old.horaIngreso, horaSalida: DateTime.now(),
-      qrCode: old.qrCode, registradoPorId: old.registradoPorId,
+      id: old.id, visitanteId: old.visitanteId, unidadId: old.unidadId,
+      guardiaId: old.guardiaId, estadoId: 2, horaIngreso: old.horaIngreso,
+      horaSalida: DateTime.now(), vehiculoId: old.vehiculoId,
     );
     _visitas[idx] = updated;
     return updated;

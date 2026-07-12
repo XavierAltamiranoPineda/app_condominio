@@ -50,9 +50,38 @@ class IncidenciaRepository {
     }
   }
 
-  Future<Incidencia> cambiarEstado(String id, String nuevoEstado) async {
-    // No hay endpoint en el contrato
-    await Future.delayed(const Duration(milliseconds: 500));
-    throw UnimplementedError('El endpoint para cambiar estado no está en el contrato');
+  /// PUT /api/v1/tickets/{id}
+  /// Payload: { categoriaId, estadoActualId, titulo, descripcion, prioridad }
+  Future<Incidencia> updateIncidencia(String id, Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.put(
+        '${ApiEndpoints.incidencias}/$id',
+        data: data,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseData = response.data as Map<String, dynamic>;
+        final payload = responseData.containsKey('data') ? responseData['data'] : responseData;
+        return Incidencia.fromJson(payload);
+      }
+
+      throw ApiException(
+        message: 'Error al actualizar la incidencia',
+        statusCode: response.statusCode ?? 500,
+        type: ApiExceptionType.unknown,
+      );
+    } catch (e) {
+      throw ApiErrorHandler.handle(e);
+    }
+  }
+
+  /// DELETE /api/v1/tickets/{id} — 204 No Content
+  Future<bool> deleteIncidencia(String id) async {
+    try {
+      final response = await _dio.delete('${ApiEndpoints.incidencias}/$id');
+      return response.statusCode == 204 || response.statusCode == 200;
+    } catch (e) {
+      throw ApiErrorHandler.handle(e);
+    }
   }
 }

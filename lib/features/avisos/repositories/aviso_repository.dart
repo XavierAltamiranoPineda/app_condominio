@@ -50,9 +50,36 @@ class AvisoRepository {
     }
   }
 
+  Future<Aviso> updateAviso(String id, Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.put(
+        '${ApiEndpoints.avisos}/$id',
+        data: data,
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseData = response.data as Map<String, dynamic>;
+        final payload = responseData.containsKey('data') ? responseData['data'] : responseData;
+        return Aviso.fromJson(payload);
+      }
+
+      throw ApiException(
+        message: 'Error al actualizar el comunicado',
+        statusCode: response.statusCode ?? 500,
+        type: ApiExceptionType.unknown,
+      );
+    } catch (e) {
+      throw ApiErrorHandler.handle(e);
+    }
+  }
+
+  /// DELETE /api/v1/comunicados/{id} — 204 No Content
   Future<bool> deleteAviso(String id) async {
-    // throw UnimplementedError('El endpoint para borrar aviso no está en el contrato');
-    await Future.delayed(const Duration(milliseconds: 500));
-    return true;
+    try {
+      final response = await _dio.delete('${ApiEndpoints.avisos}/$id');
+      return response.statusCode == 204 || response.statusCode == 200;
+    } catch (e) {
+      throw ApiErrorHandler.handle(e);
+    }
   }
 }

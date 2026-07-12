@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -19,17 +20,27 @@ class _UnidadesListViewState extends State<UnidadesListView>
     with SingleTickerProviderStateMixin {
   late TabController _tabCtrl;
   final _searchCtrl = TextEditingController();
+  Timer? _pollingTimer;
 
   @override
   void initState() {
     super.initState();
     _tabCtrl = TabController(length: 3, vsync: this);
-    WidgetsBinding.instance.addPostFrameCallback(
-        (_) => context.read<UnidadController>().fetchUnidades());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<UnidadController>().fetchUnidades();
+    });
+    
+    // Polling cada 15 segundos para sincronizar con otros clientes
+    _pollingTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+      if (mounted) {
+        context.read<UnidadController>().fetchUnidades();
+      }
+    });
   }
 
   @override
   void dispose() {
+    _pollingTimer?.cancel();
     _tabCtrl.dispose();
     _searchCtrl.dispose();
     super.dispose();
@@ -135,10 +146,25 @@ class _UnidadCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    
+    IconData _typeIcon = Icons.home_rounded;
+    switch (unidad.tipoEnum) {
+      case TipoUnidad.departamento: _typeIcon = Icons.apartment_rounded; break;
+      case TipoUnidad.casa: _typeIcon = Icons.house_rounded; break;
+      case TipoUnidad.local: _typeIcon = Icons.storefront_rounded; break;
+      case TipoUnidad.oficina: _typeIcon = Icons.work_rounded; break;
+    }
+
     return GestureDetector(
-      onTap: () => context
-          .read<UnidadController>()
-          .selectUnidad(unidad),
+      onTap: () {
+        context.read<UnidadController>().selectUnidad(unidad);
+        context.push('/unidades/${unidad.id}/editar').then((_) {
+          // Refresh list when coming back from edit
+          if (context.mounted) {
+            context.read<UnidadController>().fetchUnidades();
+          }
+        });
+      },
       child: Container(
         decoration: BoxDecoration(
           color: AppTheme.surfaceColor,
@@ -167,8 +193,7 @@ class _UnidadCard extends StatelessWidget {
                     color: _statusColor.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: Icon(Icons.home_rounded,
-                      color: _statusColor, size: 22),
+                  child: Icon(_typeIcon, color: _statusColor, size: 22),
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(

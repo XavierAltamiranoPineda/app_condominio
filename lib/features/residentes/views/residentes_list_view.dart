@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -19,6 +20,7 @@ class _ResidentesListViewState extends State<ResidentesListView>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final _searchCtrl = TextEditingController();
+  Timer? _pollingTimer;
 
   @override
   void initState() {
@@ -27,10 +29,17 @@ class _ResidentesListViewState extends State<ResidentesListView>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ResidenteController>().fetchResidentes();
     });
+
+    _pollingTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+      if (mounted) {
+        context.read<ResidenteController>().fetchResidentes();
+      }
+    });
   }
 
   @override
   void dispose() {
+    _pollingTimer?.cancel();
     _tabController.dispose();
     _searchCtrl.dispose();
     super.dispose();

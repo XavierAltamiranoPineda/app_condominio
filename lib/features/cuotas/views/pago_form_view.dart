@@ -50,7 +50,7 @@ class _PagoFormViewState extends State<PagoFormView> {
         if (pago != null) {
           setState(() {
             _pago = pago;
-            _cuotaId = pago.cuotaId;
+            _cuotaId = pago.cuotaId.toString();
             _residenteId = pago.residenteId;
             _montoCtrl.text = pago.montoPendiente.toStringAsFixed(0);
           });
@@ -75,18 +75,13 @@ class _PagoFormViewState extends State<PagoFormView> {
     bool ok;
     if (_isMarcarPagado) {
       final pago = Pago(
-        id: widget.pagoId!,
-        cuotaId: _cuotaId ?? '',
-        residenteId: _residenteId ?? '',
-        residenteNombre: '',
-        unidadNumero: '',
-        montoAbonado: monto,
-        montoPendiente: 0,
-        estado: 'pagado',
-        metodoPago: _metodoPago,
+        id: int.tryParse(widget.pagoId!) ?? 0,
+        cuotaId: int.tryParse(_cuotaId ?? '') ?? 0,
+        estadoId: 2, // 2 = Pagado
+        fecha: DateTime.now(),
+        valor: monto,
+        metodo: _metodoPago,
         referencia: _referenciaCtrl.text.trim(),
-        fechaPago: DateTime.now(),
-        fechaVencimiento: DateTime.now(),
       );
       ok = await ctrl.marcarComoPagado(widget.pagoId!, pago.toJson());
     } else {
@@ -97,18 +92,13 @@ class _PagoFormViewState extends State<PagoFormView> {
         return;
       }
       final pago = Pago(
-        id: '',
-        cuotaId: _cuotaId!,
-        residenteId: _residenteId ?? '',
-        residenteNombre: '',
-        unidadNumero: '',
-        montoAbonado: monto,
-        montoPendiente: 0,
-        estado: 'pagado',
-        metodoPago: _metodoPago,
+        id: 0,
+        cuotaId: int.tryParse(_cuotaId!) ?? 0,
+        estadoId: 2, // 2 = Pagado
+        fecha: DateTime.now(),
+        valor: monto,
+        metodo: _metodoPago,
         referencia: _referenciaCtrl.text.trim(),
-        fechaPago: DateTime.now(),
-        fechaVencimiento: DateTime.now(),
       );
       ok = await ctrl.registrarPago(pago.toJson());
     }
@@ -171,7 +161,7 @@ class _PagoFormViewState extends State<PagoFormView> {
                   hint: const Text('Selecciona una cuota'),
                   items: ctrl.cuotas
                       .map((c) => DropdownMenuItem(
-                            value: c.id,
+                            value: c.id.toString(),
                             child: Text(
                               '${c.descripcion} - \$${c.monto.toStringAsFixed(0)}',
                               overflow: TextOverflow.ellipsis,

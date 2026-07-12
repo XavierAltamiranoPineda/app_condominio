@@ -41,18 +41,18 @@ class _IncidenciaFormViewState extends State<IncidenciaFormView> {
     final ctrl = context.read<IncidenciaController>();
     
     final incidencia = Incidencia(
-      id: widget.incidenciaId ?? '',
+      id: int.tryParse(widget.incidenciaId ?? '') ?? 0,
       titulo: _tituloCtrl.text.trim(),
       descripcion: _descCtrl.text.trim(),
-      categoria: _categoria,
-      prioridad: _prioridad,
-      estado: 'abierta',
-      reportadoPorId: '1',
-      reportadoPorNombre: '',
-      createdAt: DateTime.now(),
+      categoriaNombre: _categoria,
+      prioridad: _prioridad.toUpperCase(),
+      estado: 'ABIERTO',
+      personaId: 1,
+      creadoPor: '',
+      fechaCreacion: DateTime.now(),
     );
 
-    final ok = await ctrl.createIncidencia(incidencia.toJson());
+    final ok = await ctrl.createIncidencia(incidencia.toJsonCreate());
 
     if (ok && mounted) {
       // Disparar notificación global

@@ -78,16 +78,14 @@ class _ReservaFormViewState extends State<ReservaFormView> {
 
     final ctrl = context.read<ReservaController>();
     final reserva = Reserva(
-      id: '',
-      areaComunId: _areaComunId!,
-      areaComunNombre: '',
-      residenteId: '1',
-      residenteNombre: '',
-      estado: 'pendiente',
-      fechaInicio: _fechaInicio!,
-      fechaFin: _fechaFin!,
+      id: 0,
+      areaId: int.tryParse(_areaComunId!) ?? 0,
+      personaId: 1,
+      estadoId: 1,
+      fecha: _fechaInicio!,
+      horaInicio: '${_fechaInicio!.hour}:${_fechaInicio!.minute.toString().padLeft(2, '0')}:00',
+      horaFin: '${_fechaFin!.hour}:${_fechaFin!.minute.toString().padLeft(2, '0')}:00',
       observaciones: _obsCtrl.text.trim(),
-      createdAt: DateTime.now(),
     );
 
     final ok = await ctrl.createReserva(reserva.toJson());
@@ -134,7 +132,7 @@ class _ReservaFormViewState extends State<ReservaFormView> {
                 items: ctrl.areasComunes
                     .where((a) => a.disponible)
                     .map((a) => DropdownMenuItem(
-                          value: a.id,
+                          value: a.id.toString(),
                           child: Text(
                               '${a.nombre} (Cap. ${a.capacidad})'),
                         ))

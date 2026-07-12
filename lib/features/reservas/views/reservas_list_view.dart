@@ -97,8 +97,8 @@ class _ReservasListViewState extends State<ReservasListView>
         itemBuilder: (_, i) => _ReservaCard(
           reserva: reservas[i],
           showActions: showActions,
-          onAprobar: () => ctrl.aprobarReserva(reservas[i].id),
-          onRechazar: () => ctrl.rechazarReserva(reservas[i].id),
+          onAprobar: () => ctrl.aprobarReserva(reservas[i].id.toString()),
+          onRechazar: () => ctrl.rechazarReserva(reservas[i].id.toString()),
         ),
       ),
     );

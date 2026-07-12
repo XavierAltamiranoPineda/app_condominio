@@ -29,6 +29,36 @@ class _UnidadFormViewState extends State<UnidadFormView> {
   String _estado = 'disponible';
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.isEditing) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final ctrl = context.read<UnidadController>();
+        final u = ctrl.selectedUnidad ?? 
+                  ctrl.unidades.cast<Unidad?>().firstWhere((u) => u?.id.toString() == widget.unidadId, orElse: () => null);
+        if (u != null) {
+          _numeroCtrl.text = u.numero;
+          _pisoCtrl.text = u.piso ?? '';
+          _torreCtrl.text = u.torreId?.toString() ?? '';
+          _cuotaCtrl.text = u.alicuota.toString();
+          
+          setState(() {
+            final tStr = u.tipo.toLowerCase();
+            if (['departamento', 'casa', 'local', 'oficina'].contains(tStr)) {
+              _tipo = tStr;
+            }
+            
+            final eStr = u.estadoEnum.name;
+            if (['disponible', 'ocupada', 'mantenimiento'].contains(eStr)) {
+              _estado = eStr;
+            }
+          });
+        }
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _numeroCtrl.dispose();
     _pisoCtrl.dispose();
@@ -41,16 +71,25 @@ class _UnidadFormViewState extends State<UnidadFormView> {
   Future<void> _handleSubmit() async {
     if (!_formKey.currentState!.validate()) return;
     final ctrl = context.read<UnidadController>();
+
+    // Map status string to state ID based on common db seeds
+    int mappedEstadoId = 1;
+    final eStr = _estado.toUpperCase();
+    if (eStr == 'DISPONIBLE' || eStr == 'DESHABITADO')
+      mappedEstadoId = 2; // Assuming 2 is disponible/deshabitado
+    if (eStr == 'MANTENIMIENTO' || eStr == 'EN_MANTENIMIENTO')
+      mappedEstadoId = 3;
+
     final unidad = Unidad(
-      id: widget.unidadId ?? '',
+      id: int.tryParse(widget.unidadId ?? '') ?? 0,
+      condominioId: 1,
       numero: _numeroCtrl.text.trim(),
       piso: _pisoCtrl.text.trim(),
-      torre: _torreCtrl.text.trim(),
-      tipo: _tipo,
-      metrosCuadrados: double.tryParse(_metrosCtrl.text) ?? 0,
-      estado: _estado,
-      cuotaMensual: double.tryParse(_cuotaCtrl.text) ?? 0,
-      createdAt: DateTime.now(),
+      torreId: int.tryParse(_torreCtrl.text.trim()),
+      tipo: _tipo.toUpperCase(),
+      estadoId: mappedEstadoId,
+      estadoNombre: _estado.toUpperCase(),
+      alicuota: double.tryParse(_cuotaCtrl.text) ?? 0,
     );
     final data = unidad.toJson();
 
@@ -89,8 +128,10 @@ class _UnidadFormViewState extends State<UnidadFormView> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('Datos de la unidad',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: const Color(0xFF1A237E))),
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(color: const Color(0xFF1A237E))),
               const SizedBox(height: 12),
 
               AppTextField(
@@ -98,8 +139,7 @@ class _UnidadFormViewState extends State<UnidadFormView> {
                 controller: _numeroCtrl,
                 label: 'Número de unidad',
                 prefixIcon: Icons.tag_rounded,
-                validator: (v) =>
-                    (v?.isEmpty ?? true) ? 'Requerido' : null,
+                validator: (v) => (v?.isEmpty ?? true) ? 'Requerido' : null,
                 textInputAction: TextInputAction.next,
               ),
               const SizedBox(height: 12),
@@ -139,10 +179,10 @@ class _UnidadFormViewState extends State<UnidadFormView> {
                   DropdownMenuItem(
                       value: 'departamento', child: Text('Departamento')),
                   DropdownMenuItem(value: 'casa', child: Text('Casa')),
-                  DropdownMenuItem(value: 'local', child: Text('Local comercial')),
                   DropdownMenuItem(
-                      value: 'estacionamiento',
-                      child: Text('Estacionamiento')),
+                      value: 'local', child: Text('Local comercial')),
+                  DropdownMenuItem(
+                      value: 'oficina', child: Text('Oficina')),
                 ],
                 onChanged: (v) => setState(() => _tipo = v!),
               ),
@@ -185,8 +225,7 @@ class _UnidadFormViewState extends State<UnidadFormView> {
                       value: 'disponible', child: Text('Disponible')),
                   DropdownMenuItem(value: 'ocupada', child: Text('Ocupada')),
                   DropdownMenuItem(
-                      value: 'mantenimiento',
-                      child: Text('En mantenimiento')),
+                      value: 'mantenimiento', child: Text('En Reforma')),
                 ],
                 onChanged: (v) => setState(() => _estado = v!),
               ),
@@ -201,9 +240,7 @@ class _UnidadFormViewState extends State<UnidadFormView> {
               const SizedBox(height: 28),
               AppButton(
                 id: 'unidad_submit',
-                label: widget.isEditing
-                    ? 'Guardar cambios'
-                    : 'Crear unidad',
+                label: widget.isEditing ? 'Guardar cambios' : 'Crear unidad',
                 isFullWidth: true,
                 isLoading: ctrl.isLoading,
                 onPressed: ctrl.isLoading ? null : _handleSubmit,

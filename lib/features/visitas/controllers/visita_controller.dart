@@ -73,29 +73,32 @@ class VisitaController extends ChangeNotifier {
   }
 
   Future<bool> registrarSalida(String id) async {
-    final idx = _visitas.indexWhere((v) => v.id == id);
-    if (idx != -1) {
-      // Simulate updating end time
-      final updated = Visita(
-        id: _visitas[idx].id,
-        nombreVisitante: _visitas[idx].nombreVisitante,
-        documentoIdentidad: _visitas[idx].documentoIdentidad,
-        telefono: _visitas[idx].telefono,
-        unidadDestino: _visitas[idx].unidadDestino,
-        residenteNombre: _visitas[idx].residenteNombre,
-        proposito: _visitas[idx].proposito,
-        vehiculoPlaca: _visitas[idx].vehiculoPlaca,
-        horaIngreso: _visitas[idx].horaIngreso,
-        horaSalida: DateTime.now(), // update
-        qrCode: _visitas[idx].qrCode,
-        registradoPorId: _visitas[idx].registradoPorId,
-      );
-      _visitas[idx] = updated;
-      _selectedVisita = updated;
+    _state = VisitaViewState.loading;
+    notifyListeners();
+    try {
+      final intId = int.tryParse(id) ?? 0;
+      final existing = _visitas.firstWhere((v) => v.id == intId);
+      final updateData = {
+        'visitanteId': existing.visitanteId,
+        'unidadId': existing.unidadId,
+        'guardiaId': existing.guardiaId,
+        'estadoId': 2, // 2 = FINALIZADO
+      };
+      
+      final updated = await _repository.updateVisita(intId, updateData);
+      final idx = _visitas.indexWhere((v) => v.id == intId);
+      if (idx != -1) _visitas[idx] = updated;
+      if (_selectedVisita?.id == intId) _selectedVisita = updated;
+      
+      _state = VisitaViewState.success;
       notifyListeners();
       return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _state = VisitaViewState.error;
+      notifyListeners();
+      return false;
     }
-    return false;
   }
 
   void clearSelected() {

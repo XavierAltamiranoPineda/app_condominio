@@ -39,7 +39,42 @@ class UnidadRepository {
         final payload = responseData.containsKey('data') ? responseData['data'] : responseData;
         return Unidad.fromJson(payload);
       }
-      throw ApiException(message: 'Error al registrar unidad', statusCode: response.statusCode ?? 500, type: ApiExceptionType.unknown);
+      String errorMsg = 'Error al registrar unidad';
+      if (response.data is Map && response.data['message'] != null) {
+        errorMsg = response.data['message'].toString();
+      }
+      throw ApiException(message: errorMsg, statusCode: response.statusCode ?? 500, type: ApiExceptionType.unknown);
+    } catch (e) {
+      throw ApiErrorHandler.handle(e);
+    }
+  }
+
+  /// PUT /api/v1/unidades/{id}
+  Future<Unidad> updateUnidad(int id, Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.put('${ApiEndpoints.unidades}/$id', data: data);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseData = response.data as Map<String, dynamic>;
+        final payload = responseData.containsKey('data') ? responseData['data'] : responseData;
+        return Unidad.fromJson(payload);
+      }
+      String errorMsg = 'Error al actualizar unidad';
+      if (response.data is Map && response.data['message'] != null) {
+        errorMsg = response.data['message'].toString();
+      }
+      throw ApiException(message: errorMsg, statusCode: response.statusCode ?? 500, type: ApiExceptionType.unknown);
+    } catch (e) {
+      throw ApiErrorHandler.handle(e);
+    }
+  }
+
+  /// DELETE /api/v1/unidades/{id}
+  Future<bool> deleteUnidad(int id) async {
+    try {
+      final response = await _dio.delete('${ApiEndpoints.unidades}/$id');
+      // El contrato especifica 204 No Content para DELETE exitoso
+      return response.statusCode == 204 || response.statusCode == 200;
     } catch (e) {
       throw ApiErrorHandler.handle(e);
     }

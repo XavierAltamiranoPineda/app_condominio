@@ -81,17 +81,39 @@ class UnidadController extends ChangeNotifier {
   }
 
   Future<bool> deleteUnidad(String id) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    // Simulated delete for now
-    _unidades.removeWhere((u) => u.id == id);
-    notifyListeners();
-    return true;
+    final intId = int.tryParse(id);
+    if (intId == null) return false;
+    try {
+      final ok = await _repository.deleteUnidad(intId);
+      if (ok) {
+        _unidades.removeWhere((u) => u.id.toString() == id);
+        notifyListeners();
+      }
+      return ok;
+    } catch (e) {
+      return false;
+    }
   }
 
   Future<bool> updateUnidad(String id, Map<String, dynamic> data) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    // Simulated update
-    return true;
+    final intId = int.tryParse(id);
+    if (intId == null) return false;
+    _state = UnidadViewState.loading;
+    notifyListeners();
+    try {
+      final updated = await _repository.updateUnidad(intId, data);
+      final idx = _unidades.indexWhere((u) => u.id.toString() == id);
+      if (idx != -1) _unidades[idx] = updated;
+      _selectedUnidad = updated;
+      _state = UnidadViewState.success;
+      notifyListeners();
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      _state = UnidadViewState.error;
+      notifyListeners();
+      return false;
+    }
   }
 
   void selectUnidad(Unidad u) {

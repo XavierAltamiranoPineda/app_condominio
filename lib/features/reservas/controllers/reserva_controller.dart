@@ -53,8 +53,9 @@ class ReservaController extends ChangeNotifier {
   }
 
   Future<void> fetchReservaById(String id) async {
+    final intId = int.tryParse(id) ?? 0;
     _selectedReserva = _reservas.cast<Reserva?>().firstWhere(
-      (r) => r?.id == id,
+      (r) => r?.id == intId,
       orElse: () => null,
     );
     notifyListeners();
@@ -78,23 +79,28 @@ class ReservaController extends ChangeNotifier {
   }
 
   Future<bool> aprobarReserva(String id) async {
-    return _changeEstado(id, 2); // Asumiendo que 2 es Aprobada
+    return _changeEstado(id, 2, 'APROBADA'); 
   }
 
   Future<bool> rechazarReserva(String id) async {
-    return _changeEstado(id, 3); // Asumiendo que 3 es Rechazada
+    return _changeEstado(id, 3, 'RECHAZADA'); 
   }
 
   Future<bool> cancelReserva(String id) async {
-    return _changeEstado(id, 4); // Asumiendo que 4 es Cancelada
+    return _changeEstado(id, 4, 'CANCELADA'); 
   }
 
-  Future<bool> _changeEstado(String id, int estadoId) async {
+  Future<bool> _changeEstado(String id, int estadoId, String estadoNombre) async {
     _state = ReservaViewState.loading;
     notifyListeners();
     try {
-      final updated = await _repository.cambiarEstado(id, estadoId);
-      final idx = _reservas.indexWhere((r) => r.id == id);
+      final intId = int.tryParse(id) ?? 0;
+      final existing = _reservas.firstWhere((r) => r.id == intId);
+      final updateData = existing.toJson();
+      updateData['estadoId'] = estadoId;
+      
+      final updated = await _repository.updateReserva(intId, updateData);
+      final idx = _reservas.indexWhere((r) => r.id == intId);
       if (idx != -1) _reservas[idx] = updated;
       _selectedReserva = updated;
       _state = ReservaViewState.success;

@@ -40,4 +40,46 @@ class VisitaRepository {
       throw ApiErrorHandler.handle(e);
     }
   }
+
+  /// PUT /api/v1/visitantes/{id}
+  /// Payload: { nombre, cedula, telefono }
+  Future<Visitante> updateVisitante(int id, Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.put('${ApiEndpoints.visitas}/$id', data: data);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseData = response.data as Map<String, dynamic>;
+        final payload = responseData.containsKey('data') ? responseData['data'] : responseData;
+        return Visitante.fromJson(payload);
+      }
+      throw ApiException(message: 'Error al actualizar visitante', statusCode: response.statusCode ?? 500, type: ApiExceptionType.unknown);
+    } catch (e) {
+      throw ApiErrorHandler.handle(e);
+    }
+  }
+
+  Future<Visita> updateVisita(int id, Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.put('${ApiEndpoints.visitas}/$id', data: data);
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final responseData = response.data as Map<String, dynamic>;
+        final payload = responseData.containsKey('data') ? responseData['data'] : responseData;
+        return Visita.fromJson(payload);
+      }
+      throw ApiException(message: 'Error al actualizar visita', statusCode: response.statusCode ?? 500, type: ApiExceptionType.unknown);
+    } catch (e) {
+      throw ApiErrorHandler.handle(e);
+    }
+  }
+
+  /// DELETE /api/v1/visitantes/{id} — 204 No Content
+  Future<bool> deleteVisitante(int id) async {
+    try {
+      final response = await _dio.delete('${ApiEndpoints.visitas}/$id');
+      return response.statusCode == 204 || response.statusCode == 200;
+    } catch (e) {
+      throw ApiErrorHandler.handle(e);
+    }
+  }
 }

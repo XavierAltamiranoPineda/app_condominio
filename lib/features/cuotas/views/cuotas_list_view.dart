@@ -59,7 +59,7 @@ class _CuotasListViewState extends State<CuotasListView>
   /// Monto que se descuenta del "Por cobrar" según los pendientes seleccionados
   double _descuentoSeleccionado(List<Pago> pagos) {
     return pagos
-        .where((p) => _selectedPendientes.contains(p.id))
+        .where((p) => _selectedPendientes.contains(p.id.toString()))
         .fold(0.0, (s, p) => s + p.montoPendiente);
   }
 
@@ -170,7 +170,7 @@ class _CuotasListViewState extends State<CuotasListView>
                     setState(() {
                       if (v == true) {
                         _selectedPendientes
-                            .addAll(pendientes.map((p) => p.id));
+                            .addAll(pendientes.map((p) => p.id.toString()));
                       } else {
                         _selectedPendientes.clear();
                       }
@@ -189,13 +189,13 @@ class _CuotasListViewState extends State<CuotasListView>
                 final pago = pendientes[i];
                 return _PendientePagoCard(
                   pago: pago,
-                  selected: _selectedPendientes.contains(pago.id),
+                  selected: _selectedPendientes.contains(pago.id.toString()),
                   onSelectedChanged: (v) {
                     setState(() {
                       if (v == true) {
-                        _selectedPendientes.add(pago.id);
+                        _selectedPendientes.add(pago.id.toString());
                       } else {
-                        _selectedPendientes.remove(pago.id);
+                        _selectedPendientes.remove(pago.id.toString());
                       }
                     });
                   },
